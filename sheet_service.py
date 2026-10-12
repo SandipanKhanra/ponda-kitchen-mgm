@@ -463,9 +463,9 @@ class SheetService:
         total_bank = sum(r["amount"] for r in records if any(k in r["payment_through"].lower() for k in ["bank", "transfer", "neft", "cheque"]))
         total_other_payment = total_collections - (total_cash + total_gpay + total_bank)
 
-        count_received = sum(1 for r in records if r["payment_received"].strip().lower() in ["yes", "y", "done"])
+        count_received = sum(1 for r in records if r["payment_received"].strip().lower() in ["yes", "y", "done", "paid"])
         count_pending = len(records) - count_received
-        amt_received = sum(r["amount"] for r in records if r["payment_received"].strip().lower() in ["yes", "y", "done"])
+        amt_received = sum(r["amount"] for r in records if r["payment_received"].strip().lower() in ["yes", "y", "done", "paid"])
         amt_pending = total_collections - amt_received
 
         # Cook Incentive Summary (from Section 3 Policy Matrix - Order type only)
@@ -530,7 +530,7 @@ class SheetService:
                 "Other": max(total_other_payment, 0.0)
             },
             "bifurcation_status": {
-                "Received": amt_received,
+                "Paid": amt_received,
                 "Pending": amt_pending
             },
             "bifurcation_program": programs_bifurcation,

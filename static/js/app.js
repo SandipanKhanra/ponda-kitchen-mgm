@@ -163,12 +163,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (refreshBtn) {
     refreshBtn.addEventListener("click", async () => {
+      refreshBtn.disabled = true;
       refreshBtn.classList.add("spinning");
-      await fetchRecords(true);
-      await fetchVendors();
-      await fetchCooks();
-      refreshBtn.classList.remove("spinning");
-      showToast("Kitchen records freshly synchronized with Google Sheet!", "success");
+      const btnSpan = refreshBtn.querySelector("span");
+      const originalText = btnSpan ? btnSpan.textContent : "Refresh";
+      if (btnSpan) btnSpan.textContent = "Syncing...";
+
+      if (statusBadge) {
+        statusBadge.classList.add("status-syncing");
+        if (statusText) statusText.textContent = "Syncing with Google Sheets...";
+      }
+
+      setTableLoading(true, "Synchronizing records with Google Sheets...");
+
+      try {
+        await fetchRecords(true);
+        await fetchVendors();
+        await fetchCooks();
+        showToast("Kitchen records freshly synchronized with Google Sheet!", "success");
+      } catch (err) {
+        showToast("Error synchronizing records: " + err.message, "error");
+      } finally {
+        refreshBtn.disabled = false;
+        refreshBtn.classList.remove("spinning");
+        if (btnSpan) btnSpan.textContent = originalText;
+        await fetchStatus();
+      }
+    });
+  }
+
+  if (exportExcelBtn) {
+    exportExcelBtn.addEventListener("click", () => {
+      const origHtml = exportExcelBtn.innerHTML;
+      exportExcelBtn.innerHTML = '<span class="btn-spinner"></span> <span>Exporting...</span>';
+      setTimeout(() => {
+        exportExcelBtn.innerHTML = origHtml;
+      }, 1500);
+      showToast(`Generating Excel export for ${currentTab}...`, "info");
     });
   }
 
@@ -213,7 +244,95 @@ async function initApp() {
 }
 
 // =============================================================================
-// Multi-Page Tab Navigation
+// Interactive Loading State Helpers
+// =============================================================================
+function setTableLoading(isLoading, message = "Syncing records from Google Sheet...") {
+  if (!tableBody) return;
+  if (isLoading) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="11" class="table-loading-cell">
+          <div class="loading-state-box">
+            <div class="spinner-modern"></div>
+            <div class="loading-state-text">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spinning">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
+              <span>${escapeHtml(message)}</span>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+    if (mobileCardsList) {
+      mobileCardsList.innerHTML = `
+        <div class="loading-state-box mobile-loading-box">
+          <div class="spinner-modern"></div>
+          <div class="loading-state-text">
+            <span>${escapeHtml(message)}</span>
+          </div>
+        </div>
+      `;
+    }
+    if (emptyState) emptyState.style.display = "none";
+  }
+}
+
+function setVendorsLoading(isLoading, message = "Syncing vendor records from Google Sheet...") {
+  const tbody = document.getElementById("vendorTableBody");
+  const entriesTbody = document.getElementById("vendorEntriesTableBody");
+  if (isLoading) {
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="table-loading-cell">
+            <div class="loading-state-box">
+              <div class="spinner-modern"></div>
+              <div class="loading-state-text">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spinning">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+                <span>${escapeHtml(message)}</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+    if (entriesTbody) {
+      entriesTbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="table-loading-cell">
+            <div class="loading-state-box">
+              <div class="spinner-modern"></div>
+              <div class="loading-state-text">Fetching itemized bill entries...</div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+  }
+}
+
+function setCooksLoading(isLoading, message = "Calculating cook payroll and incentives from Sheet...") {
+  const grid = document.getElementById("cookCardsGrid");
+  if (isLoading && grid) {
+    grid.innerHTML = `
+      <div class="loading-state-box cook-loading-box" style="grid-column: 1 / -1;">
+        <div class="spinner-modern"></div>
+        <div class="loading-state-text">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spinning">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+          <span>${escapeHtml(message)}</span>
+        </div>
+      </div>
+    `;
+  }
+}
+
+// =============================================================================
+// Multi-Page Tab Navigation (Smooth Section Switching)
 // =============================================================================
 function switchPage(pageId) {
   activePage = pageId;
@@ -236,10 +355,12 @@ function switchPage(pageId) {
     if (el) el.classList.toggle("active", k === pageId);
   });
 
-  // Refresh page-specific components
+  // Refresh page-specific components with responsive feedback
   if (pageId === "vendors") {
+    if (currentVendors.length === 0) setVendorsLoading(true, "Fetching vendor bills from Google Sheet...");
     fetchVendors();
   } else if (pageId === "cooks") {
+    if (currentCooks.length === 0) setCooksLoading(true, "Calculating cook payroll and incentives...");
     fetchCooks();
   } else if (pageId === "analytics") {
     renderDonutChart();
@@ -345,6 +466,11 @@ async function switchMonthTab(tabName) {
     if (exportExcelBtn) exportExcelBtn.href = `/api/export?tab=${encodeURIComponent(currentTab)}`;
     updateCookTabLabels();
 
+    // Show loading state across active views
+    setTableLoading(true, `Syncing month "${tabName}" from Google Sheet...`);
+    if (activePage === "vendors") setVendorsLoading(true, `Syncing vendors for "${tabName}"...`);
+    if (activePage === "cooks") setCooksLoading(true, `Calculating payroll for "${tabName}"...`);
+
     await fetch("/api/tabs/select", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -357,11 +483,15 @@ async function switchMonthTab(tabName) {
     showToast(`Switched to month: ${tabName}`, "success");
   } catch (err) {
     console.error("switchMonthTab error:", err);
+    showToast(`Error switching month: ${err.message}`, "error");
   }
 }
 
 async function fetchRecords(forceRefresh = false) {
   try {
+    if (forceRefresh || allRecords.length === 0) {
+      setTableLoading(true, "Syncing records with Google Sheet...");
+    }
     const params = new URLSearchParams();
     if (currentTab) params.append("tab", currentTab);
     if (forceRefresh) params.append("refresh", "true");
@@ -378,6 +508,9 @@ async function fetchRecords(forceRefresh = false) {
   } catch (err) {
     console.error("fetchRecords error:", err);
     showToast("Error retrieving records", "error");
+    if (tableBody && allRecords.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:var(--danger); padding:2.5rem;">Failed to load records from Google Sheet. Click Refresh above to retry.</td></tr>`;
+    }
   }
 }
 
@@ -413,9 +546,10 @@ function applyFiltersAndPaginate() {
     }
 
     if (statusVal && statusVal !== "All") {
-      const isYes = (r.payment_received || "").toLowerCase() === "yes";
-      if (statusVal === "Yes" && !isYes) return false;
-      if (statusVal === "Pending" && isYes) return false;
+      const rcvdRaw = (r.payment_received || "").trim().toLowerCase();
+      const isPaid = rcvdRaw === "yes" || rcvdRaw === "paid" || rcvdRaw === "done" || rcvdRaw === "y";
+      if ((statusVal === "Paid" || statusVal === "Yes") && !isPaid) return false;
+      if ((statusVal === "Pending" || statusVal === "No") && isPaid) return false;
     }
 
     if (menuVal && menuVal !== "All") {
@@ -465,8 +599,9 @@ function renderRecordsTable(records) {
       const isCash = (r.payment_through || "").toLowerCase().includes("cash");
       const payBadge = `<span class="badge ${isCash ? "badge-cash" : "badge-gpay"}">${escapeHtml(r.payment_through || "Cash")}</span>`;
 
-      const isReceived = (r.payment_received || "").toLowerCase() === "yes";
-      const statusBadgeHtml = `<span class="badge ${isReceived ? "badge-yes" : "badge-pending"}">${isReceived ? "Yes" : "Pending"}</span>`;
+      const rcvdRaw = (r.payment_received || "").trim().toLowerCase();
+      const isPaid = rcvdRaw === "yes" || rcvdRaw === "paid" || rcvdRaw === "done" || rcvdRaw === "y";
+      const statusBadgeHtml = `<span class="badge ${isPaid ? "badge-paid" : "badge-pending"}">${isPaid ? "Paid" : "Pending"}</span>`;
 
       const devCount = isOrder && r.number_of_devotees ? r.number_of_devotees : "—";
       const menuType = isOrder && r.menu_type ? escapeHtml(r.menu_type) : "—";
@@ -536,8 +671,9 @@ function renderRecordsTable(records) {
         const isCash = (r.payment_through || "").toLowerCase().includes("cash");
         const payBadge = `<span class="badge ${isCash ? "badge-cash" : "badge-gpay"}">${escapeHtml(r.payment_through || "Cash")}</span>`;
 
-        const isReceived = (r.payment_received || "").toLowerCase() === "yes";
-        const statusBadgeHtml = `<span class="badge ${isReceived ? "badge-yes" : "badge-pending"}">${isReceived ? "Yes" : "Pending"}</span>`;
+        const rcvdRaw = (r.payment_received || "").trim().toLowerCase();
+        const isPaid = rcvdRaw === "yes" || rcvdRaw === "paid" || rcvdRaw === "done" || rcvdRaw === "y";
+        const statusBadgeHtml = `<span class="badge ${isPaid ? "badge-paid" : "badge-pending"}">${isPaid ? "Paid" : "Pending"}</span>`;
 
         const hasDetails = (isOrder && (r.number_of_devotees || r.menu_type || r.cook_incentive)) || r.notes;
 
@@ -740,7 +876,12 @@ function renderDonutChart() {
   let legendHtml = "";
 
   items.forEach(([label, value], i) => {
-    const color = CHART_COLORS[i % CHART_COLORS.length];
+    let color = CHART_COLORS[i % CHART_COLORS.length];
+    if (activeBifurcation === "status") {
+      const lbl = label.toLowerCase();
+      if (lbl === "paid" || lbl === "received") color = "#10b981";
+      else if (lbl === "pending") color = "#f59e0b";
+    }
     const pct = total > 0 ? (value / total) * 100 : 0;
     const strokeDasharray = `${(pct / 100) * circumference} ${circumference}`;
     const strokeDashoffset = -accumulatedAngle;
@@ -897,7 +1038,7 @@ async function handleAddSubmit(e) {
   e.preventDefault();
   const btn = document.getElementById("saveAddBtn");
   btn.disabled = true;
-  btn.textContent = "Writing to Google Sheet...";
+  btn.innerHTML = '<span class="btn-spinner"></span> Writing to Google Sheet...';
 
   const typeVal = document.getElementById("addType").value;
   const isOrder = typeVal.trim().toLowerCase() === "order";
@@ -946,7 +1087,9 @@ function openEditModal(record) {
   document.getElementById("editType").value = record.type || "Order";
   document.getElementById("editPayment").value = record.payment_through || "Cash";
   document.getElementById("editAmount").value = record.amount;
-  document.getElementById("editReceived").value = record.payment_received || "Yes";
+  const rcvdRaw = (record.payment_received || "").trim().toLowerCase();
+  const isPaid = rcvdRaw === "yes" || rcvdRaw === "paid" || rcvdRaw === "done" || rcvdRaw === "y";
+  document.getElementById("editReceived").value = isPaid ? "Yes" : "No";
   document.getElementById("editNotes").value = record.notes || "";
   document.getElementById("editDevotees").value = isOrder && record.number_of_devotees ? record.number_of_devotees : "";
   document.getElementById("editMenu").value = isOrder && record.menu_type ? record.menu_type : "";
@@ -960,7 +1103,7 @@ async function handleEditSubmit(e) {
   const recordId = document.getElementById("editRecordId").value;
   const btn = document.getElementById("saveEditBtn");
   btn.disabled = true;
-  btn.textContent = "Updating Google Sheet...";
+  btn.innerHTML = '<span class="btn-spinner"></span> Updating in Google Sheet...';
 
   const typeVal = document.getElementById("editType").value;
   const isOrder = typeVal.trim().toLowerCase() === "order";
@@ -1012,7 +1155,7 @@ async function executeDelete() {
   if (!deleteTargetId) return;
   const btn = confirmDeleteBtn;
   btn.disabled = true;
-  btn.textContent = "Removing from Sheet...";
+  btn.innerHTML = '<span class="btn-spinner"></span> Removing from Sheet...';
 
   try {
     const res = await fetch(`/api/records/${deleteTargetId}?tab=${encodeURIComponent(currentTab)}`, {
@@ -1231,7 +1374,7 @@ async function handleAddVendorEntrySubmit(e) {
   }
 
   btn.disabled = true;
-  btn.textContent = "Writing & Syncing...";
+  btn.innerHTML = '<span class="btn-spinner"></span> Writing & Syncing...';
 
   try {
     const res = await fetch("/api/vendors/entries", {
@@ -1305,7 +1448,7 @@ async function handleRegisterVendorSubmit(e) {
   if (!vendorName) return;
 
   btn.disabled = true;
-  btn.textContent = "Registering...";
+  btn.innerHTML = '<span class="btn-spinner"></span> Registering...';
 
   try {
     const res = await fetch("/api/vendors", {
@@ -1393,7 +1536,7 @@ async function handleEditVendorSubmit(e) {
   const amount = parseFloat(amtInput.value || 0);
 
   btn.disabled = true;
-  btn.textContent = "Updating Google Sheet...";
+  btn.innerHTML = '<span class="btn-spinner"></span> Updating Google Sheet...';
 
   try {
     const res = await fetch(`/api/vendors/${rowNumber}?tab=${encodeURIComponent(currentTab)}`, {
@@ -1551,7 +1694,7 @@ async function handleAddCookSubmit(e) {
   if (!name) return;
 
   btn.disabled = true;
-  btn.textContent = "Adding Cook & Syncing Sheet...";
+  btn.innerHTML = '<span class="btn-spinner"></span> Adding Cook & Syncing Sheet...';
 
   try {
     const res = await fetch(`/api/cooks?tab=${encodeURIComponent(currentTab)}`, {
@@ -1604,7 +1747,7 @@ async function handleEditCookSubmit(e) {
   const btn = document.getElementById("updateCookBtn");
 
   btn.disabled = true;
-  btn.textContent = "Updating Payroll & Sheet...";
+  btn.innerHTML = '<span class="btn-spinner"></span> Updating Payroll & Sheet...';
 
   try {
     const res = await fetch(`/api/cooks/${cookId}?tab=${encodeURIComponent(currentTab)}`, {
@@ -1649,7 +1792,7 @@ async function handleCreateSheetSubmit(e) {
 
   const btn = document.getElementById("saveNewSheetBtn");
   btn.disabled = true;
-  btn.textContent = "Cloning Master Template...";
+  btn.innerHTML = '<span class="btn-spinner"></span> Cloning Master Template...';
 
   try {
     const res = await fetch("/api/sheets/create", {

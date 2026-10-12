@@ -1,6 +1,44 @@
 # Kitchen Accountability ERP 🍲
 
-A complete Kitchen Management and ERP system built with FastAPI and modern responsive UI, synchronized in real-time with **Google Sheets ("Kitchen Accountability 2025-26")** and local Excel fallback.
+A complete Kitchen Management and ERP system built with **FastAPI** and **React 18**, synchronized in real-time with **Google Sheets ("Kitchen Accountability 2025-26")** and local Excel fallback.
+
+---
+
+## ⚛️ React 18 Architecture & Modular Components
+
+The frontend has been migrated to **React 18** with a clean, modular component hierarchy:
+
+```
+static/
+├── index.html                 # Mounts React 18 application at #root
+├── css/styles.css             # Comprehensive design system, mobile responsiveness, animations
+└── js/
+    ├── constants.js           # Menu rates, Section 3 incentive matrix, currency formatters
+    ├── api.js                 # Unified API client for FastAPI endpoints
+    ├── components/
+    │   ├── Common.jsx         # Spinners, badges (Paid/Pending), loading states
+    │   ├── Toast.jsx          # Interactive toast alert notification system
+    │   ├── Header.jsx         # Topbar, month selector, new sheet trigger, theme toggle
+    │   ├── Navigation.jsx     # 5-page tab bar with smooth transition indicator
+    │   ├── SyncBanner.jsx     # Live Google Sheet status and direct link
+    │   ├── Orders/
+    │   │   ├── StatsCards.jsx         # KPI summary cards
+    │   │   ├── OrdersToolbar.jsx      # Search, 4-filter dropdowns, refresh & export
+    │   │   ├── OrdersTable.jsx        # Desktop / tablet table with Paid/Pending color coding
+    │   │   ├── OrdersMobileCards.jsx  # Mobile cards view with Card/Table toggle
+    │   │   └── Pagination.jsx         # Pagination controls
+    │   ├── Vendors/
+    │   │   └── VendorSection.jsx      # Available vendors & itemized grocery bills log
+    │   ├── Cooks/
+    │   │   └── CookSection.jsx        # Cook payroll cards & policy incentive calculator
+    │   ├── Analytics/
+    │   │   └── AnalyticsSection.jsx   # Interactive SVG Donut chart & category bifurcations
+    │   ├── Policy/
+    │   │   └── PolicySection.jsx      # Official kitchen rules, matrix table & PDF viewer
+    │   └── Modals.jsx                 # Accessible modals with in-button spinners
+    ├── App.jsx                # Root orchestrator managing state, lifecycle, and tabs
+    └── index.jsx              # React 18 DOM mount point
+```
 
 ---
 
