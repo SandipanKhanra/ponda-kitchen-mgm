@@ -526,38 +526,65 @@ function renderRecordsTable(records) {
     mobileCardsList.innerHTML = records
       .map((r) => {
         const isOrder = (r.type || "").trim().toLowerCase() === "order";
-        const isSponsor = (r.type || "").toLowerCase() === "sponsor";
-        const typeBadge = `<span class="badge ${isSponsor ? "badge-sponsor" : "badge-order"}">${escapeHtml(r.type || "Order")}</span>`;
+        const isSponsor = (r.type || "").trim().toLowerCase() === "sponsor";
+        const isCoupon = (r.type || "").trim().toLowerCase().includes("coupon");
+        let typeBadgeClass = "badge-order";
+        if (isSponsor) typeBadgeClass = "badge-sponsor";
+        if (isCoupon) typeBadgeClass = "badge-in-progress";
+        const typeBadge = `<span class="badge ${typeBadgeClass}">${escapeHtml(r.type || "Order")}</span>`;
+
         const isCash = (r.payment_through || "").toLowerCase().includes("cash");
         const payBadge = `<span class="badge ${isCash ? "badge-cash" : "badge-gpay"}">${escapeHtml(r.payment_through || "Cash")}</span>`;
+
         const isReceived = (r.payment_received || "").toLowerCase() === "yes";
         const statusBadgeHtml = `<span class="badge ${isReceived ? "badge-yes" : "badge-pending"}">${isReceived ? "Yes" : "Pending"}</span>`;
+
+        const hasDetails = (isOrder && (r.number_of_devotees || r.menu_type || r.cook_incentive)) || r.notes;
 
         return `
           <div class="record-card">
             <div class="record-card-header">
               <div>
                 <div class="record-card-title">${escapeHtml(r.person_name)}</div>
-                <div class="record-card-meta">${escapeHtml(r.date)} &bull; ${escapeHtml(r.program || "General")}</div>
+                <div class="record-card-meta">
+                  <span>${escapeHtml(r.date)}</span>
+                  <span>&bull;</span>
+                  <span>${escapeHtml(r.program || "General")}</span>
+                </div>
               </div>
               <div>
-                <span class="amount-display" style="font-size:1.15rem;">₹${formatCurrency(r.amount)}</span>
+                <span class="amount-display" style="font-size:1.15rem; color:var(--primary);">₹${formatCurrency(r.amount)}</span>
               </div>
             </div>
-            <div style="font-size:0.8rem; color:var(--text-muted); margin:0.35rem 0;">
-              ${isOrder && r.number_of_devotees ? `Devotees: <strong>${r.number_of_devotees}</strong> &bull; ` : ""}
-              ${isOrder && r.menu_type ? `Menu: <strong>${escapeHtml(r.menu_type)}</strong> &bull; ` : ""}
-              ${isOrder && r.cook_incentive ? `Incentive: <strong style="color:var(--primary);">₹${formatCurrency(r.cook_incentive)}</strong>` : ""}
-            </div>
-            <div class="record-card-body" style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem;">
-              <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+            ${hasDetails ? `
+              <div class="record-card-details">
+                ${isOrder && r.number_of_devotees ? `<span>Devotees: <strong>${r.number_of_devotees}</strong></span>` : ""}
+                ${isOrder && r.menu_type ? `<span>Menu: <strong>${escapeHtml(r.menu_type)}</strong></span>` : ""}
+                ${isOrder && r.cook_incentive ? `<span>Incentive: <strong style="color:var(--primary);">₹${formatCurrency(r.cook_incentive)}</strong></span>` : ""}
+                ${r.notes ? `<span>Notes: <em>${escapeHtml(r.notes)}</em></span>` : ""}
+              </div>
+            ` : ""}
+            <div class="record-card-body">
+              <div style="display:flex; gap:0.35rem; flex-wrap:wrap; align-items:center;">
                 ${typeBadge}
                 ${payBadge}
                 ${statusBadgeHtml}
               </div>
               <div class="record-card-actions">
-                <button class="btn btn-secondary btn-sm" onclick='openEditModal(${JSON.stringify(r)})'>Edit</button>
-                <button class="btn btn-danger btn-sm" onclick='openDeleteModal("${r.id}", "${escapeHtml(r.person_name)}", ${r.amount})'>Delete</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="openEditModalById('${r.id}')" aria-label="Edit record">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  <span>Edit</span>
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="openDeleteModalById('${r.id}')" aria-label="Delete record">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                  <span>Delete</span>
+                </button>
               </div>
             </div>
           </div>
@@ -566,6 +593,38 @@ function renderRecordsTable(records) {
       .join("");
   }
 }
+
+function openEditModalById(id) {
+  const rec = allRecords.find((r) => String(r.id) === String(id));
+  if (rec) openEditModal(rec);
+}
+window.openEditModalById = openEditModalById;
+
+function openDeleteModalById(id) {
+  const rec = allRecords.find((r) => String(r.id) === String(id));
+  if (rec) openDeleteModal(rec.id, rec.person_name, rec.amount);
+}
+window.openDeleteModalById = openDeleteModalById;
+
+function switchRecordView(view) {
+  const cardsList = document.getElementById("mobileCardsList");
+  const tableWrapper = document.getElementById("recordsTableWrapper");
+  const btnCards = document.getElementById("cardViewBtn");
+  const btnTable = document.getElementById("tableViewBtn");
+
+  if (view === "table") {
+    if (cardsList) cardsList.classList.add("force-hide");
+    if (tableWrapper) tableWrapper.classList.add("force-show");
+    if (btnCards) btnCards.classList.remove("active");
+    if (btnTable) btnTable.classList.add("active");
+  } else {
+    if (cardsList) cardsList.classList.remove("force-hide");
+    if (tableWrapper) tableWrapper.classList.remove("force-show");
+    if (btnCards) btnCards.classList.add("active");
+    if (btnTable) btnTable.classList.remove("active");
+  }
+}
+window.switchRecordView = switchRecordView;
 
 function renderPagination(total, startIndex, countOnPage, maxPages) {
   if (!paginationInfo || !paginationControls) return;

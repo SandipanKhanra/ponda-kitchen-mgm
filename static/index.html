@@ -259,7 +259,7 @@
                   <polyline points="1 20 1 14 7 14" />
                   <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
                 </svg>
-                <span class="hide-mobile">Refresh</span>
+                <span>Refresh</span>
               </button>
 
               <a id="exportExcelBtn" href="/api/export" class="btn btn-secondary" download title="Download month as Excel">
@@ -268,7 +268,7 @@
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                <span class="hide-mobile">Export Excel</span>
+                <span>Export Excel</span>
               </a>
 
               <button id="openAddModalBtn" class="btn btn-primary" onclick="openAddRecordModal()">
@@ -287,7 +287,21 @@
               <h2 class="section-title">
                 <span id="currentMonthTitle">April 26</span> Transactions
               </h2>
-              <div style="display:flex; align-items:center; gap:0.75rem;">
+              <div class="table-header-actions">
+                <div class="mobile-view-toggle hide-desktop" id="mobileViewToggle">
+                  <button type="button" class="view-toggle-btn active" id="cardViewBtn" onclick="switchRecordView('cards')" title="Card View" aria-label="Card View">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    <span>Cards</span>
+                  </button>
+                  <button type="button" class="view-toggle-btn" id="tableViewBtn" onclick="switchRecordView('table')" title="Table View" aria-label="Table View">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                    <span>Table</span>
+                  </button>
+                </div>
                 <span id="recordCountLabel" class="badge-count">0 items</span>
                 <div class="page-size-selector">
                   <label for="pageSizeSelect">Show:</label>
@@ -302,7 +316,7 @@
             </div>
 
             <!-- Table for Desktop -->
-            <div class="table-scroll-wrapper">
+            <div class="table-scroll-wrapper records-table-wrapper" id="recordsTableWrapper">
               <table class="data-table" id="recordsTable">
                 <thead>
                   <tr>
