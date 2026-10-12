@@ -1912,14 +1912,21 @@ body {
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  padding: 1rem 0.5rem 0.25rem 0.5rem;
-  border-top: 1px solid var(--border-subtle);
+  padding: 0.85rem 1.25rem;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-surface);
 }
 
 .pagination-info {
   font-size: 0.875rem;
   color: var(--text-muted);
   font-weight: 500;
+  white-space: nowrap;
+}
+
+.pagination-info strong {
+  color: var(--text-main);
+  font-weight: 700;
 }
 
 .pagination-controls {
@@ -1932,8 +1939,8 @@ body {
   font-family: inherit;
   font-size: 0.875rem;
   font-weight: 600;
-  min-width: 34px;
-  height: 34px;
+  min-width: 36px;
+  height: 36px;
   padding: 0 0.5rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
@@ -1943,24 +1950,30 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
 }
 
 .page-btn:hover:not(:disabled) {
   background-color: var(--primary-light);
   color: var(--primary);
   border-color: var(--primary);
+  transform: translateY(-1px);
 }
 
 .page-btn.active {
   background-color: var(--primary);
   color: #ffffff;
   border-color: var(--primary);
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25);
+  font-weight: 700;
 }
 
 .page-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
+  border-color: var(--border-subtle);
+  background-color: transparent;
 }
 
 .page-size-selector {
@@ -1969,16 +1982,31 @@ body {
   gap: 0.5rem;
   font-size: 0.875rem;
   color: var(--text-muted);
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .page-size-select {
-  padding: 0.3rem 0.6rem;
+  padding: 0.35rem 0.65rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
   background-color: var(--bg-surface);
   color: var(--text-main);
   font-family: inherit;
   font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.page-size-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.page-size-select:hover {
+  border-color: var(--text-light);
 }
 
 .incentive-preview-box {
