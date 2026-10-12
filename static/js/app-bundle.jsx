@@ -1692,57 +1692,38 @@ window.KitchenComponents.Analytics.AnalyticsSection = (() => {
       };
     });
 
+    const StatsCards = window.KitchenComponents?.StatsCards || (() => null);
+
     return (
       <div id="pageAnalytics" className="app-page active">
-        {/* Analytics Header */}
+        {/* Page Header */}
         <section className="section-toolbar">
           <div>
             <h2 className="section-title" style={{ margin: 0 }}>Donation &amp; Revenue Analytics</h2>
             <p style={{ margin: '0.25rem 0 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-              Bifurcation of collections across transaction types, payment channels and menus
+              Bifurcation of collections across transaction types, payment channels, and menus
             </p>
           </div>
         </section>
 
-        {/* Analytics Visuals Grid */}
-        <div className="analytics-grid">
-          {/* Donut Chart Card */}
-          <div className="analytics-card">
-            <h3 className="analytics-card-title">Collections Breakdown</h3>
-            <div className="donut-chart-container">
-              <div className="donut-svg-wrapper">
-                <svg viewBox="0 0 100 100" id="donutSvg" className="donut-svg">
-                  {total === 0 || slices.length === 0 ? (
-                    <circle cx="50" cy="50" r="38" fill="none" stroke="var(--border-color)" strokeWidth="12" />
-                  ) : (
-                    slices.map((slice, i) => (
-                      <circle
-                        key={slice.label}
-                        cx="50"
-                        cy="50"
-                        r={radius}
-                        fill="none"
-                        stroke={slice.color}
-                        strokeWidth="12"
-                        strokeDasharray={slice.strokeDasharray}
-                        strokeDashoffset={slice.strokeDashoffset}
-                        transform="rotate(-90 50 50)"
-                        style={{ transition: 'stroke-dashoffset 0.4s ease' }}
-                      />
-                    ))
-                  )}
-                </svg>
-                <div className="donut-center-info">
-                  <span id="donutCenterAmount" className="center-amount">₹{formatCurrency(total)}</span>
-                  <span id="donutCenterLabel" className="center-label">{title}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Top Summary KPI Cards */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <StatsCards metrics={metrics} />
+        </div>
 
-          {/* Bifurcation Selector & Dynamic Legend */}
-          <div className="analytics-card">
-            <div className="bifurcation-tabs" role="tablist">
+        {/* Main Analytics Card */}
+        <div className="analytics-section">
+          {/* Analytics Header with Title & Bifurcation Tabs */}
+          <div className="analytics-header">
+            <div className="analytics-title-group">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--primary)' }}>
+                <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                <path d="M22 12A10 10 0 0 0 12 2v10z" />
+              </svg>
+              <h3 className="section-title" style={{ margin: 0 }}>Collections Breakdown</h3>
+            </div>
+
+            <div className="bifurcation-tabs" role="tablist" aria-label="Bifurcation filters">
               {[
                 { id: 'type', label: 'By Type' },
                 { id: 'payment', label: 'Payment Mode' },
@@ -1755,27 +1736,64 @@ window.KitchenComponents.Analytics.AnalyticsSection = (() => {
                   type="button"
                   className={`bifurcation-tab-btn ${activeBifurcation === tab.id ? 'active' : ''}`}
                   onClick={() => setActiveBifurcation(tab.id)}
+                  role="tab"
+                  aria-selected={activeBifurcation === tab.id}
                 >
                   {tab.label}
                 </button>
               ))}
             </div>
+          </div>
 
+          {/* Analytics Visual Grid: Left Donut, Right Legend */}
+          <div className="analytics-grid">
+            {/* Left: Donut Chart with Centered Metric Info */}
+            <div className="chart-wrapper">
+              <svg viewBox="0 0 100 100" id="donutSvg" className="donut-svg" aria-label="Donut Chart">
+                {total === 0 || slices.length === 0 ? (
+                  <circle cx="50" cy="50" r="38" fill="none" stroke="var(--border-color)" strokeWidth="14" />
+                ) : (
+                  slices.map((slice) => (
+                    <circle
+                      key={slice.label}
+                      cx="50"
+                      cy="50"
+                      r={radius}
+                      fill="none"
+                      stroke={slice.color}
+                      strokeWidth="14"
+                      strokeDasharray={slice.strokeDasharray}
+                      strokeDashoffset={slice.strokeDashoffset}
+                      style={{ transition: 'stroke-dasharray 0.4s ease, stroke-dashoffset 0.4s ease, stroke 0.3s ease' }}
+                    >
+                      <title>{slice.label}: ₹{formatCurrency(slice.value)} ({slice.percentage}%)</title>
+                    </circle>
+                  ))
+                )}
+              </svg>
+
+              <div className="donut-center-text">
+                <span id="donutCenterAmount" className="donut-center-amount">₹{formatCurrency(total)}</span>
+                <span id="donutCenterLabel" className="donut-center-label">{title}</span>
+              </div>
+            </div>
+
+            {/* Right: Legend Breakdown List */}
             <div className="chart-legend-list" id="chartLegendList">
               {slices.length === 0 ? (
-                <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem', padding: '2rem' }}>
-                  No data recorded for this category yet.
+                <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem', padding: '2.5rem 1rem', background: 'var(--border-subtle)', borderRadius: 'var(--radius-md)' }}>
+                  No transaction data recorded for this category yet.
                 </div>
               ) : (
                 slices.map((slice) => (
                   <div key={slice.label} className="legend-item">
                     <div className="legend-label-group">
-                      <span className="legend-dot" style={{ backgroundColor: slice.color }}></span>
-                      <span className="legend-label">{slice.label}</span>
+                      <span className="legend-color-dot" style={{ backgroundColor: slice.color }}></span>
+                      <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{slice.label}</span>
                     </div>
-                    <div className="legend-values">
-                      <span className="legend-amount">₹{formatCurrency(slice.value)}</span>
-                      <span className="legend-pct">({slice.percentage}%)</span>
+                    <div className="legend-value-group">
+                      <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>₹{formatCurrency(slice.value)}</span>
+                      <span className="legend-pct-badge">{slice.percentage}%</span>
                     </div>
                   </div>
                 ))
