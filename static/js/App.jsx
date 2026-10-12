@@ -8,32 +8,33 @@ window.KitchenComponents.App = (() => {
   const { React } = window;
   const { useState, useEffect, useMemo, useCallback } = React;
 
-  const { api } = { api: window.KitchenAPI };
-  const { Header } = window.KitchenComponents.Header;
-  const { Navigation } = window.KitchenComponents.Navigation;
-  const { SyncBanner } = window.KitchenComponents.SyncBanner;
-  const { ToastContainer } = window.KitchenComponents.Toast;
-  const { StatsCards } = window.KitchenComponents.Orders;
-  const { OrdersToolbar } = window.KitchenComponents.Orders;
-  const { OrdersTable } = window.KitchenComponents.Orders;
-  const { OrdersMobileCards } = window.KitchenComponents.Orders;
-  const { Pagination } = window.KitchenComponents.Orders;
-  const { VendorSection } = window.KitchenComponents.Vendors;
-  const { CookSection } = window.KitchenComponents.Cooks;
-  const { AnalyticsSection } = window.KitchenComponents.Analytics;
-  const { PolicySection } = window.KitchenComponents.Policy;
-  const {
-    AddOrderModal,
-    EditOrderModal,
-    DeleteOrderModal,
-    AddVendorEntryModal,
-    RegisterVendorModal,
-    EditVendorModal,
-    VendorBillsModal,
-    AddCookModal,
-    EditCookModal,
-    CreateSheetModal
-  } = window.KitchenComponents.Modals;
+  const api = window.KitchenAPI;
+  const KC = window.KitchenComponents || {};
+  const Header = KC.Header?.Header || KC.Header || (() => null);
+  const Navigation = KC.Navigation?.Navigation || KC.Navigation || (() => null);
+  const SyncBanner = KC.SyncBanner?.SyncBanner || KC.SyncBanner || (() => null);
+  const ToastContainer = KC.Toast?.ToastContainer || KC.ToastContainer || (() => null);
+  const StatsCards = KC.Orders?.StatsCards?.StatsCards || KC.Orders?.StatsCards || KC.StatsCards || (() => null);
+  const OrdersToolbar = KC.Orders?.OrdersToolbar?.OrdersToolbar || KC.Orders?.OrdersToolbar || KC.OrdersToolbar || (() => null);
+  const OrdersTable = KC.Orders?.OrdersTable?.OrdersTable || KC.Orders?.OrdersTable || KC.OrdersTable || (() => null);
+  const OrdersMobileCards = KC.Orders?.OrdersMobileCards?.OrdersMobileCards || KC.Orders?.OrdersMobileCards || KC.OrdersMobileCards || (() => null);
+  const Pagination = KC.Orders?.Pagination?.Pagination || KC.Orders?.Pagination || KC.Pagination || (() => null);
+  const VendorSection = KC.Vendors?.VendorSection?.VendorSection || KC.Vendors?.VendorSection || KC.VendorSection || (() => null);
+  const CookSection = KC.Cooks?.CookSection?.CookSection || KC.Cooks?.CookSection || KC.CookSection || (() => null);
+  const AnalyticsSection = KC.Analytics?.AnalyticsSection?.AnalyticsSection || KC.Analytics?.AnalyticsSection || KC.AnalyticsSection || (() => null);
+  const PolicySection = KC.Policy?.PolicySection?.PolicySection || KC.Policy?.PolicySection || KC.PolicySection || (() => null);
+
+  const Modals = KC.Modals || KC;
+  const AddOrderModal = Modals.AddOrderModal || (() => null);
+  const EditOrderModal = Modals.EditOrderModal || (() => null);
+  const DeleteOrderModal = Modals.DeleteOrderModal || (() => null);
+  const AddVendorEntryModal = Modals.AddVendorEntryModal || (() => null);
+  const RegisterVendorModal = Modals.RegisterVendorModal || (() => null);
+  const EditVendorModal = Modals.EditVendorModal || (() => null);
+  const VendorBillsModal = Modals.VendorBillsModal || (() => null);
+  const AddCookModal = Modals.AddCookModal || (() => null);
+  const EditCookModal = Modals.EditCookModal || (() => null);
+  const CreateSheetModal = Modals.CreateSheetModal || (() => null);
 
   function App() {
     // -------------------------------------------------------------------------
@@ -715,5 +716,7 @@ window.KitchenComponents.App = (() => {
     );
   }
 
-  return { App };
+  return App;
 })();
+
+window.KitchenComponents.App.App = window.KitchenComponents.App;

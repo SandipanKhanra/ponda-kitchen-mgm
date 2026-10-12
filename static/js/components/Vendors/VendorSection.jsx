@@ -8,7 +8,7 @@ window.KitchenComponents.Vendors = window.KitchenComponents.Vendors || {};
 window.KitchenComponents.Vendors.VendorSection = (() => {
   const { React } = window;
   const { formatCurrency } = window.KitchenConstants;
-  const { TableLoadingCell } = window.KitchenComponents.Common;
+  const TableLoadingCell = window.KitchenComponents?.Common?.TableLoadingCell || window.KitchenComponents?.TableLoadingCell || (() => null);
 
   function VendorSection({
     vendorsData = {},
@@ -301,6 +301,8 @@ window.KitchenComponents.Vendors.VendorSection = (() => {
     );
   }
 
-  return { VendorSection };
+  return VendorSection;
 })();
+
+window.KitchenComponents.VendorSection = window.KitchenComponents.Vendors.VendorSection;
 

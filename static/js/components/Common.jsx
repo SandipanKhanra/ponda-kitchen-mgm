@@ -107,3 +107,5 @@ window.KitchenComponents.Common = (() => {
   };
 })();
 
+Object.assign(window.KitchenComponents, window.KitchenComponents.Common);
+

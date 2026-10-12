@@ -21,6 +21,23 @@
           document.documentElement.setAttribute('data-theme', 'light');
         }
       })();
+
+      // Diagnostic listener to catch and report startup exceptions
+      window.addEventListener('error', function(e) {
+        console.error('[KitchenERP Startup Error]', e);
+        const root = document.getElementById('root');
+        if (root && root.querySelector('.spinner-modern')) {
+          root.innerHTML = '<div style="max-width: 650px; margin: 4rem auto; padding: 2rem; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 12px; color: #9f1239; font-family: Plus Jakarta Sans, sans-serif; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);">' +
+            '<h3 style="margin: 0 0 0.5rem; font-size: 1.25rem;">Dashboard Initialization Error</h3>' +
+            '<p style="font-size: 0.9rem; color: #4c0519; margin-bottom: 1rem;">An unexpected error occurred while loading the dashboard components:</p>' +
+            '<pre style="background: #ffe4e6; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.82rem; overflow-x: auto; color: #881337;">' + (e.message || 'Unknown initialization error') + '</pre>' +
+            '<div style="margin-top: 1.5rem; display: flex; gap: 0.75rem;">' +
+              '<button onclick="location.reload()" style="padding: 0.6rem 1.2rem; background: #e11d48; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Reload Page</button>' +
+              '<button onclick="localStorage.clear(); location.reload();" style="padding: 0.6rem 1.2rem; background: #f43f5e; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Reset Cache & Reload</button>' +
+            '</div>' +
+          '</div>';
+        }
+      });
     </script>
 
     <!-- React 18 & Babel Standalone for Native In-Browser Execution on Render -->
@@ -41,23 +58,7 @@
     <script src="/static/js/constants.js"></script>
     <script src="/static/js/api.js"></script>
 
-    <!-- Modular React Components -->
-    <script type="text/babel" src="/static/js/components/Toast.jsx"></script>
-    <script type="text/babel" src="/static/js/components/Common.jsx"></script>
-    <script type="text/babel" src="/static/js/components/Header.jsx"></script>
-    <script type="text/babel" src="/static/js/components/Navigation.jsx"></script>
-    <script type="text/babel" src="/static/js/components/SyncBanner.jsx"></script>
-    <script type="text/babel" src="/static/js/components/Orders/StatsCards.jsx"></script>
-    <script type="text/babel" src="/static/js/components/Orders/OrdersToolbar.jsx"></script>
-    <script type="text/babel" src="/static/js/components/Orders/OrdersTable.jsx"></script>
-    <script type="text/babel" src="/static/js/components/Orders/OrdersMobileCards.jsx"></script>
-    <script type="text/babel" src="/static/js/components/Orders/Pagination.jsx"></script>
-    <script type="text/babel" src="/static/js/components/Vendors/VendorSection.jsx"></script>
-    <script type="text/babel" src="/static/js/components/Cooks/CookSection.jsx"></script>
-    <script type="text/babel" src="/static/js/components/Analytics/AnalyticsSection.jsx"></script>
-    <script type="text/babel" src="/static/js/components/Policy/PolicySection.jsx"></script>
-    <script type="text/babel" src="/static/js/components/Modals.jsx"></script>
-    <script type="text/babel" src="/static/js/App.jsx"></script>
-    <script type="text/babel" src="/static/js/index.jsx"></script>
+    <!-- Consolidated React Application (Zero Race Conditions, High Performance) -->
+    <script type="text/babel" src="/static/js/app-bundle.jsx"></script>
   </body>
 </html>

@@ -170,6 +170,8 @@ window.KitchenComponents.Analytics.AnalyticsSection = (() => {
     );
   }
 
-  return { AnalyticsSection };
+  return AnalyticsSection;
 })();
+
+window.KitchenComponents.AnalyticsSection = window.KitchenComponents.Analytics.AnalyticsSection;
 

@@ -6,7 +6,7 @@ window.KitchenComponents = window.KitchenComponents || {};
 
 window.KitchenComponents.Header = (() => {
   const { React } = window;
-  const { StatusBadge } = window.KitchenComponents.Common;
+  const StatusBadge = window.KitchenComponents?.Common?.StatusBadge || window.KitchenComponents?.StatusBadge || (() => null);
 
   function Header({
     currentTab,
@@ -100,6 +100,8 @@ window.KitchenComponents.Header = (() => {
     );
   }
 
-  return { Header };
+  return Header;
 })();
+
+window.KitchenComponents.Header.Header = window.KitchenComponents.Header;
 

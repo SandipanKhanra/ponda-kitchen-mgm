@@ -63,6 +63,8 @@ window.KitchenComponents.SyncBanner = (() => {
     );
   }
 
-  return { SyncBanner };
+  return SyncBanner;
 })();
+
+window.KitchenComponents.SyncBanner.SyncBanner = window.KitchenComponents.SyncBanner;
 

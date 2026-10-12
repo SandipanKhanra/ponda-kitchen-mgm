@@ -73,6 +73,8 @@ window.KitchenComponents.Orders.StatsCards = (() => {
     );
   }
 
-  return { StatsCards };
+  return StatsCards;
 })();
+
+window.KitchenComponents.StatsCards = window.KitchenComponents.Orders.StatsCards;
 

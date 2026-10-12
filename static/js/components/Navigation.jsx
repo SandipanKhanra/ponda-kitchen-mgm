@@ -85,6 +85,8 @@ window.KitchenComponents.Navigation = (() => {
     );
   }
 
-  return { Navigation };
+  return Navigation;
 })();
+
+window.KitchenComponents.Navigation.Navigation = window.KitchenComponents.Navigation;
 

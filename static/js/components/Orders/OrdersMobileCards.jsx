@@ -8,7 +8,11 @@ window.KitchenComponents.Orders = window.KitchenComponents.Orders || {};
 window.KitchenComponents.Orders.OrdersMobileCards = (() => {
   const { React } = window;
   const { formatCurrency } = window.KitchenConstants;
-  const { TypeBadge, PaymentBadge, PaymentStatusBadge, MobileLoadingBox } = window.KitchenComponents.Common;
+  const Common = window.KitchenComponents?.Common || window.KitchenComponents || {};
+  const TypeBadge = Common.TypeBadge || (() => null);
+  const PaymentBadge = Common.PaymentBadge || (() => null);
+  const PaymentStatusBadge = Common.PaymentStatusBadge || (() => null);
+  const MobileLoadingBox = Common.MobileLoadingBox || (() => null);
 
   function OrdersMobileCards({
     records = [],
@@ -115,6 +119,8 @@ window.KitchenComponents.Orders.OrdersMobileCards = (() => {
     );
   }
 
-  return { OrdersMobileCards };
+  return OrdersMobileCards;
 })();
+
+window.KitchenComponents.OrdersMobileCards = window.KitchenComponents.Orders.OrdersMobileCards;
 

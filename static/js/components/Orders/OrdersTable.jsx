@@ -8,7 +8,11 @@ window.KitchenComponents.Orders = window.KitchenComponents.Orders || {};
 window.KitchenComponents.Orders.OrdersTable = (() => {
   const { React } = window;
   const { formatCurrency } = window.KitchenConstants;
-  const { TypeBadge, PaymentBadge, PaymentStatusBadge, TableLoadingCell } = window.KitchenComponents.Common;
+  const Common = window.KitchenComponents?.Common || window.KitchenComponents || {};
+  const TypeBadge = Common.TypeBadge || (() => null);
+  const PaymentBadge = Common.PaymentBadge || (() => null);
+  const PaymentStatusBadge = Common.PaymentStatusBadge || (() => null);
+  const TableLoadingCell = Common.TableLoadingCell || (() => null);
 
   function OrdersTable({
     records = [],
@@ -120,6 +124,8 @@ window.KitchenComponents.Orders.OrdersTable = (() => {
     );
   }
 
-  return { OrdersTable };
+  return OrdersTable;
 })();
+
+window.KitchenComponents.OrdersTable = window.KitchenComponents.Orders.OrdersTable;
 

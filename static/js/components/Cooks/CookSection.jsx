@@ -8,7 +8,7 @@ window.KitchenComponents.Cooks = window.KitchenComponents.Cooks || {};
 window.KitchenComponents.Cooks.CookSection = (() => {
   const { React } = window;
   const { formatCurrency } = window.KitchenConstants;
-  const { SpinnerModern } = window.KitchenComponents.Common;
+  const SpinnerModern = window.KitchenComponents?.Common?.SpinnerModern || window.KitchenComponents?.SpinnerModern || (() => <div className="spinner-modern" />);
 
   function CookSection({
     cooksData = {},
@@ -190,6 +190,8 @@ window.KitchenComponents.Cooks.CookSection = (() => {
     );
   }
 
-  return { CookSection };
+  return CookSection;
 })();
+
+window.KitchenComponents.CookSection = window.KitchenComponents.Cooks.CookSection;
 

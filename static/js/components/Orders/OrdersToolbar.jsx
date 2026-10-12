@@ -7,7 +7,7 @@ window.KitchenComponents.Orders = window.KitchenComponents.Orders || {};
 
 window.KitchenComponents.Orders.OrdersToolbar = (() => {
   const { React } = window;
-  const { BtnSpinner } = window.KitchenComponents.Common;
+  const BtnSpinner = window.KitchenComponents?.Common?.BtnSpinner || window.KitchenComponents?.BtnSpinner || (() => <span className="btn-spinner" />);
 
   function OrdersToolbar({
     searchQuery,
@@ -158,6 +158,8 @@ window.KitchenComponents.Orders.OrdersToolbar = (() => {
     );
   }
 
-  return { OrdersToolbar };
+  return OrdersToolbar;
 })();
+
+window.KitchenComponents.OrdersToolbar = window.KitchenComponents.Orders.OrdersToolbar;
 

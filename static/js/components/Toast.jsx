@@ -66,3 +66,5 @@ window.KitchenComponents.Toast = (() => {
   return { ToastContainer };
 })();
 
+window.KitchenComponents.ToastContainer = window.KitchenComponents.Toast.ToastContainer;
+

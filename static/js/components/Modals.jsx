@@ -14,7 +14,7 @@ window.KitchenComponents.Modals = (() => {
     calculateIncentiveClient,
     calculateOrderPricingClient
   } = window.KitchenConstants;
-  const { BtnSpinner } = window.KitchenComponents.Common;
+  const BtnSpinner = window.KitchenComponents?.Common?.BtnSpinner || window.KitchenComponents?.BtnSpinner || (() => <span className="btn-spinner" />);
 
   // 1. Add Order / Sponsor Modal
   function AddOrderModal({ isOpen, onClose, onSubmit, isSubmitting }) {
@@ -968,4 +968,6 @@ window.KitchenComponents.Modals = (() => {
     CreateSheetModal
   };
 })();
+
+Object.assign(window.KitchenComponents, window.KitchenComponents.Modals);
 

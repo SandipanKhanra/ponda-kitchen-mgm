@@ -140,6 +140,8 @@ window.KitchenComponents.Policy.PolicySection = (() => {
     );
   }
 
-  return { PolicySection };
+  return PolicySection;
 })();
+
+window.KitchenComponents.PolicySection = window.KitchenComponents.Policy.PolicySection;
 

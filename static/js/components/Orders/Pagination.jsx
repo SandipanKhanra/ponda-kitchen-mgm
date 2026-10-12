@@ -107,6 +107,8 @@ window.KitchenComponents.Orders.Pagination = (() => {
     );
   }
 
-  return { Pagination };
+  return Pagination;
 })();
+
+window.KitchenComponents.Pagination = window.KitchenComponents.Orders.Pagination;
 
