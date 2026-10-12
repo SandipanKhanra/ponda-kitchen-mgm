@@ -1,0 +1,1307 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kitchen Accountability ERP — ISKCON Ponda</title>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      (function() {
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="app-layout">
+      <!-- Top Navigation Bar -->
+      <header class="topbar">
+        <div class="topbar-brand">
+          <div class="brand-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z" />
+              <line x1="6" y1="17" x2="18" y2="17" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="brand-title">Kitchen Accountability</h1>
+            <p class="brand-subtitle">
+              ISKCON Ponda &bull; Live Google Sheets ERP
+            </p>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <!-- Month Selector & New Sheet Button -->
+          <div class="month-selector-wrapper">
+            <label for="monthTabSelect" class="hide-mobile" style="font-size:0.8rem; font-weight:600; color:var(--text-muted);">Month:</label>
+            <select id="monthTabSelect" class="month-tab-select" aria-label="Select month tab">
+              <option value="April 26">April 26</option>
+            </select>
+            <button
+              id="openNewSheetBtn"
+              class="btn btn-secondary btn-sm"
+              title="Create new sheet tab using Master Template"
+              onclick="openDialog('createSheetModal')"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              <span>New Sheet</span>
+            </button>
+          </div>
+
+          <div id="statusBadge" class="status-badge status-loading" title="Connection status">
+            <span class="status-dot"></span>
+            <span id="statusText">Connecting...</span>
+          </div>
+
+          <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle night mode" title="Toggle night mode">
+            <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+            <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Multi-Page Navigation Bar -->
+      <nav class="main-nav-bar" aria-label="Main Navigation">
+        <button class="nav-tab-btn active" data-page="transactions" onclick="switchPage('transactions')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+          </svg>
+          <span>Orders &amp; Sponsors</span>
+        </button>
+
+        <button class="nav-tab-btn" data-page="vendors" onclick="switchPage('vendors')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+          </svg>
+          <span>Vendor Management</span>
+        </button>
+
+        <button class="nav-tab-btn" data-page="cooks" onclick="switchPage('cooks')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          <span>Cook Management &amp; Payroll</span>
+        </button>
+
+        <button class="nav-tab-btn" data-page="analytics" onclick="switchPage('analytics')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+            <path d="M22 12A10 10 0 0 0 12 2v10z" />
+          </svg>
+          <span>Donation Analytics</span>
+        </button>
+
+        <button class="nav-tab-btn" data-page="policy" onclick="switchPage('policy')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            <line x1="9" y1="7" x2="15" y2="7" />
+            <line x1="9" y1="11" x2="13" y2="11" />
+          </svg>
+          <span>Kitchen Policy &amp; Rules</span>
+        </button>
+      </nav>
+
+      <!-- Main Content Area -->
+      <main class="main-container">
+        <!-- Live Connection Status Notification -->
+        <section id="connectionBanner" class="info-banner" style="display: none">
+          <div class="banner-content">
+            <svg class="banner-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <div id="bannerText">Connecting to Google Sheet...</div>
+          </div>
+          <div id="bannerActionContainer">
+            <a id="sheetLinkBtn" href="#" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;">
+              Open Google Sheet ↗
+            </a>
+          </div>
+        </section>
+
+        <!-- ====================================================
+             PAGE 1: ORDERS & SPONSORS
+             ==================================================== -->
+        <div id="pageTransactions" class="app-page active">
+          <!-- KPI Stats Grid -->
+          <section class="stats-grid" aria-label="Key Performance Indicators">
+            <div class="stat-card">
+              <div class="stat-icon-wrapper icon-blue">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Total Collections</span>
+                <span id="statTotalCollections" class="stat-value">₹0</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrapper icon-emerald">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                </svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Total Orders</span>
+                <span id="statTotalOrders" class="stat-value">₹0</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrapper icon-green">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Total Sponsorships</span>
+                <span id="statTotalSponsors" class="stat-value">₹0</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrapper icon-amber">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <line x1="2" y1="10" x2="22" y2="10" />
+                </svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Payment Modes</span>
+                <span id="statPaymentModes" class="stat-value" style="font-size:1.05rem;">Cash: ₹0 | GPay: ₹0</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Toolbar -->
+          <section class="controls-toolbar">
+            <div class="search-filter-group">
+              <div class="search-box">
+                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input type="text" id="searchInput" placeholder="Search person, program, date, amount..." aria-label="Search records" />
+              </div>
+
+              <div class="select-group">
+                <select id="typeFilter" aria-label="Filter by Type">
+                  <option value="All">All Types</option>
+                  <option value="Order">Orders</option>
+                  <option value="Sponsor">Sponsors</option>
+                  <option value="Coupon">Coupons</option>
+                </select>
+
+                <select id="paymentFilter" aria-label="Filter by Payment Mode">
+                  <option value="All">All Payment Modes</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Gpay">GPay</option>
+                </select>
+
+                <select id="statusFilter" aria-label="Filter by Status">
+                  <option value="All">All Statuses</option>
+                  <option value="Yes">Received (Yes)</option>
+                  <option value="Pending">Pending</option>
+                </select>
+
+                <select id="menuFilter" aria-label="Filter by Menu Type">
+                  <option value="All">All Menus</option>
+                  <option value="Light">Light (100)</option>
+                  <option value="Medium">Medium (160)</option>
+                  <option value="Heavy">Heavy (220)</option>
+                  <option value="Very Heavy">Very Heavy (250)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="action-btn-group">
+              <button id="refreshBtn" class="btn btn-secondary" title="Force refresh from Google Sheet">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 4 23 10 17 10" />
+                  <polyline points="1 20 1 14 7 14" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+                <span class="hide-mobile">Refresh</span>
+              </button>
+
+              <a id="exportExcelBtn" href="/api/export" class="btn btn-secondary" download title="Download month as Excel">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                <span class="hide-mobile">Export Excel</span>
+              </a>
+
+              <button id="openAddModalBtn" class="btn btn-primary" onclick="openAddRecordModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span>Add Entry</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- Table Container with Pagination -->
+          <section class="table-container" aria-label="Records Table">
+            <div class="table-header-bar">
+              <h2 class="section-title">
+                <span id="currentMonthTitle">April 26</span> Transactions
+              </h2>
+              <div style="display:flex; align-items:center; gap:0.75rem;">
+                <span id="recordCountLabel" class="badge-count">0 items</span>
+                <div class="page-size-selector">
+                  <label for="pageSizeSelect">Show:</label>
+                  <select id="pageSizeSelect" class="page-size-select" onchange="changePageSize(this.value)">
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="all">All</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Table for Desktop -->
+            <div class="table-scroll-wrapper">
+              <table class="data-table" id="recordsTable">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Person / Devotee</th>
+                    <th>Program / Event</th>
+                    <th>Type</th>
+                    <th>Devotees</th>
+                    <th>Menu</th>
+                    <th>Order Incentive</th>
+                    <th>Amount (₹)</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th class="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+              </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="mobile-cards-list" id="mobileCardsList"></div>
+
+            <!-- Pagination Bar -->
+            <div class="pagination-wrapper" id="paginationWrapper">
+              <div class="pagination-info" id="paginationInfo">Showing 0 to 0 of 0 entries</div>
+              <div class="pagination-controls" id="paginationControls"></div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state" style="display: none">
+              <div class="empty-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              </div>
+              <h3>No entries found</h3>
+              <p>No orders or sponsorships found matching this filter in this month.</p>
+              <button class="btn btn-primary btn-sm" onclick="openAddRecordModal()">Add First Entry</button>
+            </div>
+          </section>
+        </div>
+
+        <!-- ====================================================
+             PAGE 2: VENDOR MANAGEMENT
+             ==================================================== -->
+        <div id="pageVendors" class="app-page">
+          <section class="stats-grid" aria-label="Vendor Indicators">
+            <div class="stat-card">
+              <div class="stat-icon-wrapper icon-amber">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                </svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Total Vendor Expenses</span>
+                <span id="statVendorTotal" class="stat-value">₹0</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrapper icon-blue">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                </svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Available Vendors</span>
+                <span id="statVendorCount" class="stat-value">0</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrapper icon-emerald">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Net Difference (Debit/Credit)</span>
+                <span id="statNetDifference" class="stat-value">₹0</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="controls-toolbar">
+            <div style="font-weight:700; font-size:1.1rem; color:var(--text-main);">
+              Vendor Management &amp; Grocery Accounts (Rows 3–15 in Sheet)
+            </div>
+            <div class="action-btn-group">
+              <button class="btn btn-secondary" onclick="fetchVendors()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 4 23 10 17 10" />
+                  <polyline points="1 20 1 14 7 14" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+                <span>Refresh Vendors</span>
+              </button>
+              <button class="btn btn-secondary" onclick="openRegisterVendorModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span>Register New Vendor</span>
+              </button>
+              <button class="btn btn-primary" onclick="openAddVendorEntryModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span>Add Vendor Bill</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- Available Vendors & Monthly Totals Table -->
+          <section class="table-container" style="margin-bottom: 2rem;">
+            <div style="padding: 1rem 1.25rem 0.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);">
+              <div>
+                <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.15rem;">Currently Available Vendors &amp; Monthly Calculated Totals</h3>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Totals automatically calculated from bill entries and synchronized to Google Sheet</span>
+              </div>
+            </div>
+            <div class="table-scroll-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Sheet Row</th>
+                    <th>Vendor / Store Name</th>
+                    <th>Total Calculated Amount (₹)</th>
+                    <th>Bills Logged</th>
+                    <th class="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="vendorTableBody">
+                  <!-- Dynamically populated vendor rows -->
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Individual Bill Entries Log -->
+          <section class="table-container">
+            <div style="padding: 1rem 1.25rem 0.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);">
+              <div>
+                <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.15rem;">Vendor Bill Entries Log</h3>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">All itemized bills logged this month. Deleting a bill recalculates the vendor's total automatically.</span>
+              </div>
+              <span id="vendorEntriesCountLabel" class="badge badge-in-progress" style="font-size: 0.85rem;">0 entries</span>
+            </div>
+            <div class="table-scroll-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Vendor Name</th>
+                    <th>Invoice / Item Details</th>
+                    <th>Amount (₹)</th>
+                    <th class="text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="vendorEntriesTableBody">
+                  <!-- Dynamically populated bill entries -->
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <!-- ====================================================
+             PAGE 3: COOK MANAGEMENT & PAYROLL
+             ==================================================== -->
+        <div id="pageCooks" class="app-page">
+          <section class="stats-grid" aria-label="Cook Indicators">
+            <div class="stat-card">
+              <div class="stat-icon-wrapper icon-blue">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                </svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Total Kitchen Cooks</span>
+                <span id="statCookCount" class="stat-value">3</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrapper icon-emerald">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Order Incentive Pool</span>
+                <span id="statCookIncentivePool" class="stat-value">₹0</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrapper icon-green">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <line x1="2" y1="10" x2="22" y2="10" />
+                </svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Total Monthly Payroll</span>
+                <span id="statTotalPayroll" class="stat-value">₹0</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="controls-toolbar">
+            <div style="font-weight:700; font-size:1.1rem; color:var(--text-main); display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+              <span>Cook Incentive &amp; Salary Distribution</span>
+              <span id="cookCurrentTabBadge" class="badge badge-order" style="font-size:0.85rem;">April 26</span>
+            </div>
+            <div class="action-btn-group">
+              <button class="btn btn-secondary" onclick="fetchCooks()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 4 23 10 17 10" />
+                  <polyline points="1 20 1 14 7 14" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+                <span>Refresh Cooks</span>
+              </button>
+              <button class="btn btn-primary" onclick="openDialog('addCookModal')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span>Add New Cook</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- Cooks Profile & Payroll Cards Grid -->
+          <section class="cook-cards-grid" id="cookCardsGrid">
+            <!-- Dynamically populated cook cards -->
+          </section>
+        </div>
+
+        <!-- ====================================================
+             PAGE 4: DONATION ANALYTICS & BIFURCATIONS
+             ==================================================== -->
+        <div id="pageAnalytics" class="app-page">
+          <section class="analytics-section" aria-label="Donation & Collection Bifurcation">
+            <div class="analytics-header">
+              <div class="analytics-title-group">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                  <path d="M22 12A10 10 0 0 0 12 2v10z" />
+                </svg>
+                <h3 style="font-size:1.15rem; font-weight:800; color:var(--text-main);">
+                  Donation &amp; Collection Bifurcation Visualizations
+                </h3>
+              </div>
+              <div class="bifurcation-tabs" role="tablist">
+                <button class="bifurcation-tab-btn active" data-bifurcation="type" onclick="setBifurcation('type')">
+                  By Type
+                </button>
+                <button class="bifurcation-tab-btn" data-bifurcation="payment" onclick="setBifurcation('payment')">
+                  By Payment Mode
+                </button>
+                <button class="bifurcation-tab-btn" data-bifurcation="program" onclick="setBifurcation('program')">
+                  By Program / Event
+                </button>
+                <button class="bifurcation-tab-btn" data-bifurcation="status" onclick="setBifurcation('status')">
+                  By Status
+                </button>
+                <button class="bifurcation-tab-btn" data-bifurcation="menu" onclick="setBifurcation('menu')">
+                  By Menu Type
+                </button>
+              </div>
+            </div>
+
+            <div class="analytics-grid">
+              <div class="chart-wrapper">
+                <svg id="donutSvg" class="donut-svg" viewBox="0 0 100 100" aria-label="Donation Bifurcation Pie Chart"></svg>
+                <div class="donut-center-text">
+                  <span id="donutCenterAmount" class="donut-center-amount">₹0</span>
+                  <span id="donutCenterLabel" class="donut-center-label">Total</span>
+                </div>
+              </div>
+
+              <div class="chart-legend-list" id="chartLegendList"></div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ====================================================
+             PAGE 5: KITCHEN POLICY & OPERATIONAL GUIDELINES
+             ==================================================== -->
+        <div id="pagePolicy" class="app-page">
+          <!-- Policy Hero Banner with PDF Download -->
+          <section class="policy-hero-card">
+            <div class="policy-hero-info">
+              <div class="policy-badge-tag">OFFICIAL STANDARD OPERATING PROCEDURE</div>
+              <h2 class="policy-hero-title">ISKCON Ponda Kitchen Policy &amp; Payroll Base</h2>
+              <p class="policy-hero-subtitle">
+                Official guidelines approved by the Temple Sub-Committee for sanctified cooking, deity bhoga standards, staff roles, machine maintenance, vendor purchasing, and cook payroll/incentive distribution.
+              </p>
+            </div>
+            <div class="policy-hero-actions">
+              <a
+                href="/static/docs/ISKCON_Ponda_Kitchen_Policy.pdf"
+                target="_blank"
+                class="btn btn-primary"
+                style="text-decoration:none; display:inline-flex; align-items:center; gap:0.5rem; font-weight:700;"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                <span>Download Policy PDF (8 Pages)</span>
+              </a>
+            </div>
+          </section>
+
+          <!-- Policy Content Grid -->
+          <div class="policy-grid">
+            <!-- 1. Spiritual & Devotional Standards -->
+            <div class="policy-card">
+              <div class="policy-card-header">
+                <div class="policy-num-badge">1</div>
+                <div>
+                  <h3 class="policy-section-title">Spiritual Sanctity &amp; Daily Schedule</h3>
+                  <span class="policy-section-sub">Bhoga offering &amp; hygiene discipline</span>
+                </div>
+              </div>
+              <div class="policy-card-body">
+                <ul class="policy-list">
+                  <li><strong>Untouched Bhoga:</strong> Everything cooked must be first offered to the Lord. Mixing unoffered food with prasadam is strictly prohibited.</li>
+                  <li><strong>Personal Cleanliness:</strong> All cooking must be done strictly after a proper bath. Another bath is mandatory after afternoon rest.</li>
+                  <li><strong>Required Attire:</strong> Dhoti and Kurta only. Apron and hair caps are mandatory while cooking and must be washed nightly.</li>
+                  <li><strong>Offering Timing:</strong> Bhoga must be prepared and ready at least <strong>15 minutes prior</strong> to scheduled offering time.</li>
+                  <li><strong>Brahmachari Utensils:</strong> Prasadam for Brahmacharis must always be kept in separate sanctified utensils.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- 2. Staff Roles & Machine Responsibilities -->
+            <div class="policy-card">
+              <div class="policy-card-header">
+                <div class="policy-num-badge">2</div>
+                <div>
+                  <h3 class="policy-section-title">Staff Roles &amp; Machinery Maintenance</h3>
+                  <span class="policy-section-sub">Assigned kitchen areas and equipment</span>
+                </div>
+              </div>
+              <div class="policy-card-body">
+                <div class="duty-block">
+                  <div class="duty-name">Jitendra Prabhu (Kitchen In-Charge)</div>
+                  <div class="duty-desc">Area: Prasadam Hall (clean &amp; neat), Store Room. Machines: Big Vegetable Cutting Machine, Big Grinder, Two Weighing Scales.</div>
+                </div>
+                <div class="duty-block">
+                  <div class="duty-name">Manoranjan Prabhu (Cook)</div>
+                  <div class="duty-desc">Area: Main Kitchen, Wooden Chulha Area. Machines: Coconut Grater, Atta Making / Kneading Machine.</div>
+                </div>
+                <div class="duty-block">
+                  <div class="duty-name">Chittaranjan Prabhu (Cook)</div>
+                  <div class="duty-desc">Area: Main Kitchen, Wooden Chulha Area. Machines: Commercial Refrigerator, Heavy Mixer Grinder.</div>
+                </div>
+                <div class="duty-block">
+                  <div class="duty-name">Ranjan Prabhu (Cook)</div>
+                  <div class="duty-desc">Area: Main Kitchen, Wooden Chulha Area. Machines: Tomato Puree Machine, Potato Peeler.</div>
+                </div>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem; font-style:italic;">
+                  Note: If any devotee is absent, remaining cooks are jointly responsible for maintaining their assigned machines and area.
+                </p>
+              </div>
+            </div>
+
+            <!-- 3. Section 3 Matrix: Allowances & Incentives -->
+            <div class="policy-card full-width">
+              <div class="policy-card-header">
+                <div class="policy-num-badge">3</div>
+                <div>
+                  <h3 class="policy-section-title">Section 3: Cook Allowances &amp; Matrix Incentives</h3>
+                  <span class="policy-section-sub">Direct profit added to each person for type "Order" based on Devotee Count &amp; Menu Type</span>
+                </div>
+              </div>
+              <div class="policy-card-body">
+                <div class="table-scroll-wrapper">
+                  <table class="data-table matrix-policy-table">
+                    <thead>
+                      <tr>
+                        <th>Menu Type</th>
+                        <th>Plate Rate</th>
+                        <th>Up to 25</th>
+                        <th>26–50</th>
+                        <th>51–75</th>
+                        <th>76–100</th>
+                        <th>101–125</th>
+                        <th>126–150</th>
+                        <th>151–175</th>
+                        <th>176–200</th>
+                        <th>201–225</th>
+                        <th>226–250+</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>Light</strong></td>
+                        <td><span class="badge badge-order">₹100/plate</span></td>
+                        <td>₹88</td>
+                        <td>₹175</td>
+                        <td>₹263</td>
+                        <td><strong>₹350</strong></td>
+                        <td>₹438</td>
+                        <td>₹525</td>
+                        <td>₹613</td>
+                        <td>₹700</td>
+                        <td>₹788</td>
+                        <td><strong>₹875</strong></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Medium</strong></td>
+                        <td><span class="badge badge-sponsor">₹160/plate</span></td>
+                        <td>₹140</td>
+                        <td>₹280</td>
+                        <td>₹420</td>
+                        <td><strong>₹560</strong></td>
+                        <td>₹700</td>
+                        <td>₹840</td>
+                        <td>₹980</td>
+                        <td>₹1,120</td>
+                        <td>₹1,260</td>
+                        <td><strong>₹1,400</strong></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Heavy</strong></td>
+                        <td><span class="badge badge-cash">₹220/plate</span></td>
+                        <td>₹193</td>
+                        <td>₹385</td>
+                        <td>₹578</td>
+                        <td><strong>₹770</strong></td>
+                        <td>₹963</td>
+                        <td>₹1,115</td>
+                        <td>₹1,348</td>
+                        <td>₹1,540</td>
+                        <td>₹1,733</td>
+                        <td><strong>₹1,925</strong></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Very Heavy</strong></td>
+                        <td><span class="badge badge-gpay">₹250/plate</span></td>
+                        <td>₹219</td>
+                        <td>₹438</td>
+                        <td>₹656</td>
+                        <td><strong>₹875</strong></td>
+                        <td>₹1,094</td>
+                        <td>₹1,313</td>
+                        <td>₹1,531</td>
+                        <td>₹1,750</td>
+                        <td>₹1,969</td>
+                        <td><strong>₹2,188</strong></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.75rem; display:flex; gap:1.5rem; flex-wrap:wrap;">
+                  <span>💡 <strong>Strict Order Restriction:</strong> Matrix incentive pool applies strictly to transaction type <strong>Order</strong>. Non-orders (Sponsors, Coupons) receive ₹0 incentive.</span>
+                  <span>🤝 <strong>Direct Profit Sharing:</strong> The matrix amount is added in full directly to each cook's monthly payout on top of base salary.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Compensation, Welfare & Yearly Package -->
+            <div class="policy-card">
+              <div class="policy-card-header">
+                <div class="policy-num-badge">4</div>
+                <div>
+                  <h3 class="policy-section-title">Compensation, Benefits &amp; Yearly Package</h3>
+                  <span class="policy-section-sub">Base salary, festival incentives, PF and allowances</span>
+                </div>
+              </div>
+              <div class="policy-card-body">
+                <ul class="policy-list">
+                  <li><strong>Monthly Base Salary:</strong> Fixed at approx ₹18,000/month.</li>
+                  <li><strong>Major Festival Allowance:</strong> ₹1,000 per program for cooking on major festival days (Janmashtami, Radhashtami, Gaura Purnima).</li>
+                  <li><strong>Yearly Janmāṣṭamī Bonus:</strong> ₹5,000 annual bonus.</li>
+                  <li><strong>Annual Increment:</strong> 6% yearly increment (effective from April 2026).</li>
+                  <li><strong>Medical Assistance &amp; ESIC:</strong> ₹8,000 per year emergency assistance and ESIC coverage.</li>
+                  <li><strong>Annual Clothing:</strong> 3 dhotis, 3 kurtas, 3 aprons, 3 caps, and 3 masks provided annually.</li>
+                  <li><strong>Annual Travel:</strong> Sleeper class train tickets home &amp; return journey sponsored by temple for kitchen employees.</li>
+                  <li><strong>Total Annual Package:</strong> Estimated at <strong>₹3,75,000 / year</strong> per cook.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- 5. Leave, Weekly-Off & Order Policy -->
+            <div class="policy-card">
+              <div class="policy-card-header">
+                <div class="policy-num-badge">5</div>
+                <div>
+                  <h3 class="policy-section-title">Leave, Weekly-Off &amp; Order Rules</h3>
+                  <span class="policy-section-sub">Operational policies for orders and staff leave</span>
+                </div>
+              </div>
+              <div class="policy-card-body">
+                <ul class="policy-list">
+                  <li><strong>Weekly Off (Wednesday):</strong> Only routine cleaning and basic cooking are performed. <strong>Strictly no orders accepted on Wednesdays</strong>.</li>
+                  <li><strong>Paid Leave:</strong> 1 month paid leave per year. Unused leave can be encashed as an extra month's salary at the end of the financial year.</li>
+                  <li><strong>Custom Menu Orders:</strong> Must be placed at least <strong>48 hours in advance</strong>.</li>
+                  <li><strong>Advance Payment:</strong> 100% advance payment required directly into ISKCON Ponda account via UPI or Net Banking (cheques not accepted).</li>
+                  <li><strong>No Home Delivery:</strong> Devotees must arrange pickup directly from ISKCON Ponda Kitchen.</li>
+                  <li><strong>Notice Period:</strong> Mandatory notice period of <strong>2 months</strong> when leaving service.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- 6. Governance & Sub-Committee Sign-Off -->
+            <div class="policy-card full-width">
+              <div class="policy-card-header">
+                <div class="policy-num-badge">6</div>
+                <div>
+                  <h3 class="policy-section-title">Devotee Interaction Guidelines &amp; Sub-Committee Sign-Off</h3>
+                  <span class="policy-section-sub">Approved governance and authority structure</span>
+                </div>
+              </div>
+              <div class="policy-card-body">
+                <p style="font-size:0.875rem; color:var(--text-main); margin-bottom:1rem;">
+                  The temple kitchen is meant for serving the Lord and all devotees equally. Private exchanges of money, loans, or seeking special personal prasadam through cooks is strictly prohibited. All payments, orders, and feedback must be routed exclusively through the <strong>Kitchen In-Charge</strong> (9 AM–9 PM).
+                </p>
+                <div class="committee-signatures-grid">
+                  <div class="signature-chip">
+                    <span class="sig-name">Sushant Caitanya Prabhu</span>
+                    <span class="sig-role">Sub-Committee Member</span>
+                  </div>
+                  <div class="signature-chip">
+                    <span class="sig-name">Anant Lila Prabhu</span>
+                    <span class="sig-role">Sub-Committee Member</span>
+                  </div>
+                  <div class="signature-chip">
+                    <span class="sig-name">Sankarshan Priya Prabhu</span>
+                    <span class="sig-role">Sub-Committee Member</span>
+                  </div>
+                  <div class="signature-chip">
+                    <span class="sig-name">Vishnu Charan Prabhu</span>
+                    <span class="sig-role">Sub-Committee Member</span>
+                  </div>
+                  <div class="signature-chip">
+                    <span class="sig-name">Sarva Lakshami Mataji</span>
+                    <span class="sig-role">Sub-Committee Member</span>
+                  </div>
+                  <div class="signature-chip">
+                    <span class="sig-name">Rupesh Naik Prabhu</span>
+                    <span class="sig-role">Sub-Committee Member</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- ====================================================
+         MODALS & DIALOGS
+         ==================================================== -->
+
+    <!-- Modal: Add New Transaction -->
+    <dialog id="addModal" class="app-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3 class="dialog-title">Add Kitchen Entry (Order / Sponsor)</h3>
+          <button class="close-btn" onclick="closeDialog('addModal')" aria-label="Close dialog">&times;</button>
+        </div>
+        <form id="addRecordForm" class="dialog-form" onsubmit="handleAddSubmit(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="addDate">Date *</label>
+              <input type="date" id="addDate" required />
+            </div>
+            <div class="form-group">
+              <label for="addPerson">Person Name / Devotee *</label>
+              <input type="text" id="addPerson" required placeholder="e.g. Gandha Mataji, Rahul Prabhu" />
+            </div>
+            <div class="form-group">
+              <label for="addProgram">Program / Event</label>
+              <input type="text" id="addProgram" placeholder="e.g. Fri Ghanekar, Ekadashi Prasad" />
+            </div>
+            <div class="form-group">
+              <label for="addType">Transaction Type *</label>
+              <select id="addType" onchange="toggleOrderFields('add')">
+                <option value="Order">Order</option>
+                <option value="Sponsor">Sponsor</option>
+                <option value="Coupon">Coupon</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="addPayment">Payment Through *</label>
+              <select id="addPayment">
+                <option value="Cash">Cash</option>
+                <option value="Gpay">GPay</option>
+                <option value="Bank">Bank Transfer</option>
+                <option value="Cheque">Cheque</option>
+              </select>
+            </div>
+
+            <!-- Auto-Calculated Devotees & Menu Type (Orders Only) -->
+            <div class="form-group" id="addDevoteesGroup">
+              <label for="addDevotees">Number of Devotees <span style="font-size:0.75rem; color:var(--primary); font-weight:600;">(Orders only)</span></label>
+              <input type="number" id="addDevotees" min="0" placeholder="e.g. 50, 100" oninput="onDevoteesOrMenuChange('add')" />
+            </div>
+            <div class="form-group" id="addMenuGroup">
+              <label for="addMenu">Menu Type <span style="font-size:0.75rem; color:var(--primary); font-weight:600;">(Orders only)</span></label>
+              <select id="addMenu" onchange="onDevoteesOrMenuChange('add')">
+                <option value="">Select Menu...</option>
+                <option value="Light">Light (₹100/plate)</option>
+                <option value="Medium">Medium (₹160/plate)</option>
+                <option value="Heavy">Heavy (₹220/plate)</option>
+                <option value="Very Heavy">Very Heavy (₹250/plate)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="addAmount">Amount (₹) *</label>
+              <input type="number" id="addAmount" required step="any" min="0" placeholder="Auto-calculated for Orders, or manual for others" />
+            </div>
+
+            <div class="form-group full-width">
+              <div id="addIncentivePreview" class="incentive-preview-box" style="display:none;">
+                <span>💡 Order Incentive: <strong id="addIncentiveVal" style="color:var(--primary);">₹0</strong></span>
+                <span id="addIncentiveSplit" style="color:var(--text-muted); font-size:0.8rem;"></span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="addReceived">Payment Received? *</label>
+              <select id="addReceived">
+                <option value="Yes">Yes (Received)</option>
+                <option value="No">No (Pending)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="addNotes">Notes / Verification</label>
+              <input type="text" id="addNotes" placeholder="Optional notes or receipt #" />
+            </div>
+          </div>
+          <div class="dialog-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('addModal')">Cancel</button>
+            <button type="submit" id="saveAddBtn" class="btn btn-primary">Sync to Google Sheet</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- Modal: Edit Transaction -->
+    <dialog id="editModal" class="app-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3 class="dialog-title">Edit Kitchen Entry</h3>
+          <button class="close-btn" onclick="closeDialog('editModal')" aria-label="Close dialog">&times;</button>
+        </div>
+        <form id="editRecordForm" class="dialog-form" onsubmit="handleEditSubmit(event)">
+          <input type="hidden" id="editRecordId" />
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="editDate">Date *</label>
+              <input type="date" id="editDate" required />
+            </div>
+            <div class="form-group">
+              <label for="editPerson">Person Name / Devotee *</label>
+              <input type="text" id="editPerson" required />
+            </div>
+            <div class="form-group">
+              <label for="editProgram">Program / Event</label>
+              <input type="text" id="editProgram" />
+            </div>
+            <div class="form-group">
+              <label for="editType">Transaction Type *</label>
+              <select id="editType" onchange="toggleOrderFields('edit')">
+                <option value="Order">Order</option>
+                <option value="Sponsor">Sponsor</option>
+                <option value="Coupon">Coupon</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="editPayment">Payment Through *</label>
+              <select id="editPayment">
+                <option value="Cash">Cash</option>
+                <option value="Gpay">GPay</option>
+                <option value="Bank">Bank Transfer</option>
+                <option value="Cheque">Cheque</option>
+              </select>
+            </div>
+            <div class="form-group" id="editDevoteesGroup">
+              <label for="editDevotees">Number of Devotees <span style="font-size:0.75rem; color:var(--primary); font-weight:600;">(Orders only)</span></label>
+              <input type="number" id="editDevotees" min="0" oninput="onDevoteesOrMenuChange('edit')" />
+            </div>
+            <div class="form-group" id="editMenuGroup">
+              <label for="editMenu">Menu Type <span style="font-size:0.75rem; color:var(--primary); font-weight:600;">(Orders only)</span></label>
+              <select id="editMenu" onchange="onDevoteesOrMenuChange('edit')">
+                <option value="">Select Menu...</option>
+                <option value="Light">Light (₹100/plate)</option>
+                <option value="Medium">Medium (₹160/plate)</option>
+                <option value="Heavy">Heavy (₹220/plate)</option>
+                <option value="Very Heavy">Very Heavy (₹250/plate)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="editAmount">Amount (₹) *</label>
+              <input type="number" id="editAmount" required step="any" min="0" />
+            </div>
+            <div class="form-group full-width">
+              <div id="editIncentivePreview" class="incentive-preview-box" style="display:none;">
+                <span>💡 Order Incentive: <strong id="editIncentiveVal" style="color:var(--primary);">₹0</strong></span>
+                <span id="editIncentiveSplit" style="color:var(--text-muted); font-size:0.8rem;"></span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="editReceived">Payment Received? *</label>
+              <select id="editReceived">
+                <option value="Yes">Yes (Received)</option>
+                <option value="No">No (Pending)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="editNotes">Notes / Verification</label>
+              <input type="text" id="editNotes" />
+            </div>
+          </div>
+          <div class="dialog-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('editModal')">Cancel</button>
+            <button type="submit" id="saveEditBtn" class="btn btn-primary">Update in Google Sheet</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- Modal: Add Vendor Entry (Dropdown of Available Vendors) -->
+    <dialog id="addVendorEntryModal" class="app-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3 class="dialog-title">Add Vendor Bill Entry</h3>
+          <button class="close-btn" onclick="closeDialog('addVendorEntryModal')" aria-label="Close dialog">&times;</button>
+        </div>
+        <form class="dialog-form" onsubmit="handleAddVendorEntrySubmit(event)">
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label for="vendorSelectDropdown">Vendor Name *</label>
+              <select id="vendorSelectDropdown" required onchange="onVendorDropdownChange()">
+                <!-- Populated dynamically with available vendors -->
+              </select>
+            </div>
+            <div class="form-group full-width" id="newVendorInlineGroup" style="display:none;">
+              <label for="newVendorInlineName">Enter New Vendor / Store Name *</label>
+              <input type="text" id="newVendorInlineName" placeholder="e.g. Balaji Groceries, Amul Milk Agency" />
+            </div>
+            <div class="form-group">
+              <label for="vendorEntryAmount">Bill Amount (₹) *</label>
+              <input type="number" id="vendorEntryAmount" required step="any" min="0" placeholder="e.g. 4500" />
+            </div>
+            <div class="form-group">
+              <label for="vendorEntryDate">Bill Date *</label>
+              <input type="date" id="vendorEntryDate" required />
+            </div>
+            <div class="form-group full-width">
+              <label for="vendorEntryNotes">Invoice / Purchased Items Description</label>
+              <input type="text" id="vendorEntryNotes" placeholder="e.g. Bill #104 - Cooking oil, Atta 50kg, Vegetables" />
+            </div>
+          </div>
+          <div class="dialog-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('addVendorEntryModal')">Cancel</button>
+            <button type="submit" id="saveVendorEntryBtn" class="btn btn-primary">Save Entry &amp; Sync to Sheet</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- Modal: Register New Vendor -->
+    <dialog id="registerVendorModal" class="app-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3 class="dialog-title">Register New Vendor / Store</h3>
+          <button class="close-btn" onclick="closeDialog('registerVendorModal')" aria-label="Close dialog">&times;</button>
+        </div>
+        <form class="dialog-form" onsubmit="handleRegisterVendorSubmit(event)">
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label for="registerVendorName">Vendor / Grocery Store Name *</label>
+              <input type="text" id="registerVendorName" required placeholder="e.g. Sita Ram Traders, Krishna Dairy" />
+            </div>
+            <div class="form-group full-width">
+              <label for="registerVendorInitialAmount">Initial Bill Amount (₹) (Optional)</label>
+              <input type="number" id="registerVendorInitialAmount" step="any" min="0" placeholder="0 if no bills yet" />
+            </div>
+          </div>
+          <div class="dialog-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('registerVendorModal')">Cancel</button>
+            <button type="submit" id="saveRegisterVendorBtn" class="btn btn-primary">Add to Available Vendors</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- Modal: Vendor Bills Breakdown Details -->
+    <dialog id="vendorBillsDetailModal" class="app-dialog">
+      <div class="dialog-content" style="max-width: 650px;">
+        <div class="dialog-header">
+          <div>
+            <h3 class="dialog-title" id="vendorBillsDetailTitle">Vendor Bills</h3>
+            <span id="vendorBillsDetailTotal" style="font-size:0.9rem; color:var(--primary); font-weight:800;">Total: ₹0</span>
+          </div>
+          <button class="close-btn" onclick="closeDialog('vendorBillsDetailModal')" aria-label="Close dialog">&times;</button>
+        </div>
+        <div style="padding: 1rem 0;">
+          <div class="table-scroll-wrapper" style="max-height: 350px;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Invoice / Items Notes</th>
+                  <th>Amount (₹)</th>
+                  <th class="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="vendorBillsDetailTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeDialog('vendorBillsDetailModal')">Close</button>
+          <button type="button" class="btn btn-primary" onclick="openAddBillForCurrentVendor()">Add Another Bill</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Modal: Edit Vendor Name / Row -->
+    <dialog id="editVendorModal" class="app-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3 class="dialog-title">Edit Vendor Name &amp; Row</h3>
+          <button class="close-btn" onclick="closeDialog('editVendorModal')" aria-label="Close dialog">&times;</button>
+        </div>
+        <form class="dialog-form" onsubmit="handleEditVendorSubmit(event)">
+          <input type="hidden" id="editVendorRow" />
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label for="editVendorName">Vendor Name *</label>
+              <input type="text" id="editVendorName" required />
+            </div>
+            <div class="form-group full-width">
+              <label for="editVendorAmount">Current Bill Amount (₹) *</label>
+              <input type="number" id="editVendorAmount" required step="any" min="0" />
+            </div>
+          </div>
+          <div class="dialog-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('editVendorModal')">Cancel</button>
+            <button type="submit" id="updateVendorBtn" class="btn btn-primary">Update in Google Sheet</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- Modal: Add New Cook Profile -->
+    <dialog id="addCookModal" class="app-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <div>
+            <h3 class="dialog-title">Add Kitchen Cook Profile</h3>
+            <span style="font-size:0.8rem; color:var(--text-muted);">Syncs live to active sheet: <strong id="addCookTabName" style="color:var(--primary);">April 26</strong></span>
+          </div>
+          <button class="close-btn" onclick="closeDialog('addCookModal')" aria-label="Close dialog">&times;</button>
+        </div>
+        <form class="dialog-form" onsubmit="handleAddCookSubmit(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="addCookName">Cook Name *</label>
+              <input type="text" id="addCookName" required placeholder="e.g. Jagannath Prabhu" />
+            </div>
+            <div class="form-group">
+              <label for="addCookSalary">Basic Monthly Salary (₹) *</label>
+              <input type="number" id="addCookSalary" required step="any" min="0" value="18000" />
+            </div>
+            <div class="form-group">
+              <label for="addCookFestival">Festival Allowance (₹)</label>
+              <input type="number" id="addCookFestival" step="any" min="0" value="1000" />
+            </div>
+            <div class="form-group">
+              <label for="addCookBonus">Yearly Janmāṣṭamī Bonus (₹)</label>
+              <input type="number" id="addCookBonus" step="any" min="0" value="0" />
+            </div>
+            <div class="form-group full-width">
+              <label for="addCookRole">Role / Machine Responsibilities</label>
+              <input type="text" id="addCookRole" placeholder="e.g. Main Kitchen & Wooden Chulha Area" />
+            </div>
+          </div>
+          <div class="dialog-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('addCookModal')">Cancel</button>
+            <button type="submit" id="saveCookBtn" class="btn btn-primary">Add Cook Profile</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- Modal: Edit Cook Payroll & Bonus -->
+    <dialog id="editCookModal" class="app-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <div>
+            <h3 class="dialog-title">Edit Cook Salary &amp; Allowances</h3>
+            <span style="font-size:0.8rem; color:var(--text-muted);">Syncs live to active sheet: <strong id="editCookTabName" style="color:var(--primary);">April 26</strong></span>
+          </div>
+          <button class="close-btn" onclick="closeDialog('editCookModal')" aria-label="Close dialog">&times;</button>
+        </div>
+        <form class="dialog-form" onsubmit="handleEditCookSubmit(event)">
+          <input type="hidden" id="editCookId" />
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="editCookNameDisplay">Cook Name *</label>
+              <input type="text" id="editCookNameDisplay" required />
+            </div>
+            <div class="form-group">
+              <label for="editCookSalary">Basic Salary (₹) *</label>
+              <input type="number" id="editCookSalary" required step="any" min="0" />
+            </div>
+            <div class="form-group">
+              <label for="editCookFestival">Festival Allowance (₹)</label>
+              <input type="number" id="editCookFestival" step="any" min="0" placeholder="₹1000 per program" />
+            </div>
+            <div class="form-group">
+              <label for="editCookBonus">Yearly Janmāṣṭamī Bonus (₹)</label>
+              <input type="number" id="editCookBonus" step="any" min="0" placeholder="₹5000" />
+            </div>
+            <div class="form-group full-width">
+              <label for="editCookRole">Role / Machine Responsibilities</label>
+              <input type="text" id="editCookRole" />
+            </div>
+          </div>
+          <div class="dialog-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('editCookModal')">Cancel</button>
+            <button type="submit" id="updateCookBtn" class="btn btn-primary">Save Payroll Details</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- Modal: Create New Month Sheet (Cloned from Master_Template) -->
+    <dialog id="createSheetModal" class="app-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3 class="dialog-title">Create New Month Sheet</h3>
+          <button class="close-btn" onclick="closeDialog('createSheetModal')" aria-label="Close dialog">&times;</button>
+        </div>
+        <form id="createSheetForm" class="dialog-form" onsubmit="handleCreateSheetSubmit(event)">
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label for="newSheetName">New Month Sheet Name *</label>
+              <input type="text" id="newSheetName" required placeholder="e.g. Nov 26, Dec 26, Jan 27" />
+              <small style="color:var(--text-muted); margin-top:0.25rem; display:block;">
+                Will duplicate from <strong>Master_Template</strong>, preserving all formatting, colors, formulas (=SUM, =SUMIF, Debit/Credit difference), vendor rows, and Section 3 matrix columns.
+              </small>
+            </div>
+            <div class="form-group full-width">
+              <label>Quick Suggestions:</label>
+              <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.25rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="setNewSheetName('Nov 26')">Nov 26</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="setNewSheetName('Dec 26')">Dec 26</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="setNewSheetName('Jan 27')">Jan 27</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="setNewSheetName('Feb 27')">Feb 27</button>
+              </div>
+            </div>
+          </div>
+          <div class="dialog-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('createSheetModal')">Cancel</button>
+            <button type="submit" id="saveNewSheetBtn" class="btn btn-primary">Clone Template to Sheet</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- Modal: Confirm Delete -->
+    <dialog id="deleteModal" class="app-dialog delete-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3 class="dialog-title text-danger">Delete Entry</h3>
+          <button class="close-btn" onclick="closeDialog('deleteModal')" aria-label="Close dialog">&times;</button>
+        </div>
+        <div class="dialog-body">
+          <p>Are you sure you want to remove this transaction from the Google Sheet?</p>
+          <div id="deleteRecordSummary" class="delete-summary-card"></div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeDialog('deleteModal')">Cancel</button>
+          <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Delete from Sheet</button>
+        </div>
+      </div>
+    </dialog>
+
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+    <script src="/static/js/app.js"></script>
+  </body>
+</html>

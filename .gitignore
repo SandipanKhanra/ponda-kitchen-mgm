@@ -1,0 +1,21 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Environment & Credentials (NEVER commit secrets!)
+.env
+credentials.json
+service_account.json
+
+# Local exports and temporary files
+*.xlsx
+!database.xlsx
+*.log
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

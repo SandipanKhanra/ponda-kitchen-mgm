@@ -1,0 +1,34 @@
+[
+  {
+    "id": "cook-1",
+    "name": "Manoranjan Prabhu",
+    "base_salary": 19000.0,
+    "role": "Main Kitchen",
+    "festival_allowance": 0.0,
+    "yearly_bonus": 0.0
+  },
+  {
+    "id": "cook-2",
+    "name": "Chittaranjan Prabhu",
+    "base_salary": 17137.0,
+    "role": "Main Kitchen, Wooden Chulha Area (Fridge, Mixer)",
+    "festival_allowance": 0.0,
+    "yearly_bonus": 0.0
+  },
+  {
+    "id": "cook-3",
+    "name": "Ranjan Prabhu",
+    "base_salary": 18000.0,
+    "role": "Main Kitchen, Wooden Chulha Area (Tomato Puree, Potato Peeler)",
+    "festival_allowance": 0.0,
+    "yearly_bonus": 0.0
+  },
+  {
+    "id": "cook-4",
+    "name": "Jitrendra Pr",
+    "base_salary": 20000.0,
+    "role": "Manager",
+    "festival_allowance": 1000.0,
+    "yearly_bonus": 0.0
+  }
+]

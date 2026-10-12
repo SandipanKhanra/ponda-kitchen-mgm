@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: kitchen-erp-dashboard
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: SPREADSHEET_ID
+        value: 15tvKnG6mx2XiwQi54pynK1q_gSMW8lNrwMklKambK4Y
+      - key: SPREADSHEET_GID
+        value: 1912501962
+      - key: GOOGLE_SERVICE_ACCOUNT_JSON
+        sync: false
