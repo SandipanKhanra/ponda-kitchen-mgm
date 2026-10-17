@@ -10,7 +10,18 @@ window.KitchenComponents.Policy.PolicySection = (() => {
   const { INCENTIVE_MATRIX, MENU_PRICES, formatCurrency } = window.KitchenConstants;
 
   function PolicySection() {
-    const devoteeTiers = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+    const devoteeTiers = [
+      "Upto 25",
+      "From 26 to 50",
+      "From 51 to 75",
+      "From 76 to 100",
+      "From 101 to 125",
+      "From 126 to 150",
+      "From 151 to 175",
+      "From 176 to 200",
+      "From 201 to 225",
+      "From 226 to 250"
+    ];
     const menuTypes = ["Very Heavy", "Heavy", "Medium", "Light"];
 
     return (
@@ -36,10 +47,11 @@ window.KitchenComponents.Policy.PolicySection = (() => {
               </div>
             </div>
             <ul className="policy-list">
-              <li>Strict adherence to Vaishnava kitchen hygiene and cleanliness standards at all times.</li>
-              <li>Only pure, untasted vegetarian bhoga ingredients offered in devotion to Sri Sri Radha Govinda.</li>
+              <li>Clean the kitchen before each new cooking begins; all cooking must be done after a proper bath and cleanliness.</li>
+              <li>Only pure, untasted vegetarian bhoga ingredients offered first to Sri Sri Radha Gopinath. No unoffered prasadam allowed.</li>
+              <li>Cooks should ensure bhoga is ready 15 mins prior to offering. Breakfast, lunch, and dinner prepared as per menu list and temple timing.</li>
+              <li>All orders, tiffins, and sponsors must be reported to the Kitchen In-charge. Cooks cannot take independent orders without informing the in-charge.</li>
               <li>All grocery purchases, vegetable purchases, and vendor expenses must be recorded on the day of purchase.</li>
-              <li>Sponsorships and order collections must be collected in advance or on the program day itself.</li>
             </ul>
           </div>
 
@@ -48,60 +60,72 @@ window.KitchenComponents.Policy.PolicySection = (() => {
             <div className="policy-card-header">
               <span className="policy-num-badge">2</span>
               <div>
-                <h3 className="policy-section-title">Key Personnel Duties</h3>
-                <span className="policy-section-sub">Kitchen operations, cooking seva, and prasadam stewardship</span>
+                <h3 className="policy-section-title">Cleaning &amp; Maintenance Responsibilities</h3>
+                <span className="policy-section-sub">Assigned areas and machines as per Section A.15 of Kitchen Policy</span>
               </div>
             </div>
             <div className="duty-block">
-              <div className="duty-name">Manoranjan Pr (Head Cook)</div>
-              <div className="duty-desc">Menu formulation, feast recipe preparation, devotee cooking operations, inventory stewardship.</div>
+              <div className="duty-name">Jitendra Prabhu (Kitchen In-charge)</div>
+              <div className="duty-desc">Area: Prasadam Hall (must always be neat and clean), Store Room &bull; Machines: Big Vegetable Cutting Machine, Big Grinder, Two Weighing Machines</div>
             </div>
             <div className="duty-block">
-              <div className="duty-name">Chittaranjan Pr (Assistant Cook)</div>
-              <div className="duty-desc">Assisting primary preparations, vegetable processing, subji cooking, spice blending and prasadam maintenance.</div>
+              <div className="duty-name">Chittaranjan Prabhu (Cook)</div>
+              <div className="duty-desc">Area: Main Kitchen, Wooden Chulha Area &bull; Machines: Fridge, Mixer</div>
             </div>
             <div className="duty-block">
-              <div className="duty-name">Ranjan Pr (Assistant Cook)</div>
-              <div className="duty-desc">Serving setup, cooking assistance, kitchen sanitization, utensil supervision and inventory checking.</div>
+              <div className="duty-name">Manoranjan Prabhu (Cook)</div>
+              <div className="duty-desc">Area: Main Kitchen, Wooden Chulha Area &bull; Machines: Coconut Grater, Atta Making Machine</div>
+            </div>
+            <div className="duty-block">
+              <div className="duty-name">Ranjan Prabhu (Cook)</div>
+              <div className="duty-desc">Area: Main Kitchen, Wooden Chulha Area &bull; Machines: Tomato Puree Machine, Potato Peeler</div>
             </div>
           </div>
 
-          {/* Section 3: Committee Signatures */}
+          {/* Section 3: Sub-Committee Confirmation & Approval */}
           <div className="policy-card full-width">
             <div className="policy-card-header">
               <span className="policy-num-badge">3</span>
               <div>
-                <h3 className="policy-section-title">Committee Signatures</h3>
-                <span className="policy-section-sub">Approved governing administration and department coordinators (2025-26)</span>
+                <h3 className="policy-section-title">Sub-Committee Confirmation &amp; Approval</h3>
+                <span className="policy-section-sub">Reviewed, confirmed, and approved by the Sub-Committee Members (Official Policy Document)</span>
               </div>
             </div>
             <div className="committee-signatures-grid">
               <div className="signature-chip">
-                <span className="sig-name">H.G. Mukunda Dasa</span>
-                <span className="sig-role">Temple President</span>
+                <span className="sig-name">Sushant Caitanya Prabhu</span>
+                <span className="sig-role">Sub-Committee Member</span>
               </div>
               <div className="signature-chip">
-                <span className="sig-name">H.G. Brajaraj Dasa</span>
-                <span className="sig-role">General Manager</span>
+                <span className="sig-name">Anant Lila Prabhu</span>
+                <span className="sig-role">Sub-Committee Member</span>
               </div>
               <div className="signature-chip">
-                <span className="sig-name">H.G. Radha Vallabh Dasa</span>
-                <span className="sig-role">Finance Coordinator</span>
+                <span className="sig-name">Sankarshan Priya Prabhu</span>
+                <span className="sig-role">Sub-Committee Member</span>
               </div>
               <div className="signature-chip">
-                <span className="sig-name">Manoranjan Pr</span>
-                <span className="sig-role">Kitchen Head</span>
+                <span className="sig-name">Vishnu Charan Prabhu</span>
+                <span className="sig-role">Sub-Committee Member</span>
+              </div>
+              <div className="signature-chip">
+                <span className="sig-name">Sarva Lakshami Mataji</span>
+                <span className="sig-role">Sub-Committee Member</span>
+              </div>
+              <div className="signature-chip">
+                <span className="sig-name">Rupesh Naik Prabhu</span>
+                <span className="sig-role">Sub-Committee Member</span>
               </div>
             </div>
           </div>
 
-          {/* Section 4: Cook Profit Share Matrix */}
+          {/* Section 4: Scale of Incentive Matrix */}
           <div className="policy-card full-width">
             <div className="policy-card-header">
               <span className="policy-num-badge">4</span>
               <div>
-                <h3 className="policy-section-title">Section 3 Policy Matrix (Cook Profit Share)</h3>
-                <span className="policy-section-sub">Dynamic per-order profit incentive calculated across devotee attendance tiers</span>
+                <h3 className="policy-section-title">Scale of Incentive for Kitchen Employees Towards ISKCON Order Prasad</h3>
+                <span className="policy-section-sub">Section 3 Policy Matrix: Allowances &amp; Incentives as per attendee slabs (Upto 25, From 26 to 50, etc.)</span>
               </div>
             </div>
 
@@ -110,17 +134,17 @@ window.KitchenComponents.Policy.PolicySection = (() => {
                 <polyline points="13 17 18 12 13 7"></polyline>
                 <polyline points="6 17 11 12 6 7"></polyline>
               </svg>
-              <span>Swipe table horizontally to view all devotee tiers (10 to 100)</span>
+              <span>Swipe table horizontally to view all attendee slabs (Upto 25, From 26 to 50... to 250)</span>
             </div>
 
             <div className="table-scroll-wrapper">
               <table className="data-table matrix-policy-table">
                 <thead>
                   <tr>
-                    <th className="sticky-col">Menu Type</th>
-                    <th>Rate / Devotee</th>
+                    <th className="sticky-col">Menus</th>
+                    <th>Rate / Plate</th>
                     {devoteeTiers.map((t) => (
-                      <th key={t}>{t} Devotees</th>
+                      <th key={t} style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{t}</th>
                     ))}
                   </tr>
                 </thead>
@@ -128,11 +152,11 @@ window.KitchenComponents.Policy.PolicySection = (() => {
                   {menuTypes.map((menu) => (
                     <tr key={menu}>
                       <td className="sticky-col"><strong>{menu}</strong></td>
-                      <td><span className="badge badge-cash">₹{MENU_PRICES[menu]}</span></td>
+                      <td><span className="badge badge-cash">₹{MENU_PRICES[menu]}/plate</span></td>
                       {devoteeTiers.map((tier, idx) => {
                         const amount = INCENTIVE_MATRIX[menu][idx];
                         return (
-                          <td key={tier}>
+                          <td key={tier} style={{ textAlign: 'center' }}>
                             <span className="matrix-amount">
                               ₹{formatCurrency(amount)}
                             </span>

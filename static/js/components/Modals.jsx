@@ -653,7 +653,7 @@ window.KitchenComponents.Modals = (() => {
       <div className="modal-backdrop" onClick={onClose}>
         <div className="modal-card" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
           <div className="dialog-header">
-            <h3>Edit Vendor (Row {vendor.row_number})</h3>
+            <h3>Edit Vendor: {vendor.vendor_name}</h3>
             <button type="button" className="btn-icon" onClick={onClose} aria-label="Close dialog">&times;</button>
           </div>
           <form onSubmit={handleSubmit}>

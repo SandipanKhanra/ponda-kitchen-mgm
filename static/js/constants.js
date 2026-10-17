@@ -69,13 +69,29 @@ window.KitchenConstants = (() => {
 
   function calculateIncentiveClient(devotees, menuType) {
     const dev = parseInt(devotees, 10);
-    if (isNaN(dev) || dev < 10) return 0;
-    const bracket = Math.min(Math.floor(dev / 10), 10);
-    const bracketIndex = bracket - 1;
-    if (bracketIndex < 0) return 0;
-    const tierRow = INCENTIVE_MATRIX[menuType];
-    if (!tierRow) return 0;
-    return tierRow[bracketIndex] || 0;
+    if (isNaN(dev) || dev <= 0 || !menuType) return 0;
+
+    let menuKey = null;
+    const menuClean = String(menuType).trim().toLowerCase();
+    for (const key of ["Very Heavy", "Heavy", "Medium", "Light"]) {
+      if (menuClean.includes(key.toLowerCase())) {
+        menuKey = key;
+        break;
+      }
+    }
+    if (!menuKey) return 0;
+
+    const rates = INCENTIVE_MATRIX[menuKey];
+    if (!rates || rates.length === 0) return 0;
+
+    const idx = Math.floor((dev - 1) / 25);
+    if (idx < rates.length) {
+      return rates[idx];
+    }
+
+    const extraBrackets = idx - rates.length + 1;
+    const step = rates[1] - rates[0];
+    return rates[rates.length - 1] + extraBrackets * step;
   }
 
   function calculateOrderPricingClient(devotees, menuType) {
