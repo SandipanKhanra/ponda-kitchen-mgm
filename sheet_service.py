@@ -94,49 +94,14 @@ DEFAULT_COOKS = [
 ]
 
 def calculate_cook_incentive(devotee_count: int, menu_type: str) -> float:
-    """Calculates cook incentive from Policy Matrix (Section 3)."""
-    if not devotee_count or devotee_count <= 0 or not menu_type:
-        return 0.0
-
-    menu_key = None
-    menu_clean = menu_type.strip().lower()
-    for key in sorted(INCENTIVE_MATRIX.keys(), key=len, reverse=True):
-        if key.lower() in menu_clean:
-            menu_key = key
-            break
-
-    if not menu_key:
-        return 0.0
-
-    rates = INCENTIVE_MATRIX[menu_key]
-    idx = (devotee_count - 1) // 25
-    if idx < len(rates):
-        return float(rates[idx])
-
-    extra_brackets = idx - len(rates) + 1
-    step = rates[1] - rates[0]
-    return float(rates[-1] + extra_brackets * step)
+    """Calculates cook incentive from Policy Matrix (Section 3). Delegated to PolicyCalculator (SRP)."""
+    from core.domain.policy import PolicyCalculator
+    return PolicyCalculator().calculate_cook_incentive(devotee_count, menu_type)
 
 def calculate_order_pricing(devotee_count: int, menu_type: str, record_type: str = "Order") -> Dict[str, Any]:
-    """Calculates suggested order amount and matrix cook incentive. Profit calculation is strictly applicable ONLY to type 'Order'."""
-    is_order = (record_type or "Order").strip().lower() == "order"
-    plate_price = 0
-    menu_clean = (menu_type or "").strip().lower()
-    for key in sorted(MENU_PRICES.keys(), key=len, reverse=True):
-        if key.lower() in menu_clean:
-            plate_price = MENU_PRICES[key]
-            break
-
-    suggested_amount = devotee_count * plate_price if (is_order and devotee_count and plate_price) else 0.0
-    incentive = calculate_cook_incentive(devotee_count, menu_type) if is_order else 0.0
-    return {
-        "devotees": devotee_count if is_order else 0,
-        "menu_type": menu_type if is_order else "",
-        "plate_price": plate_price if is_order else 0,
-        "suggested_amount": suggested_amount,
-        "cook_incentive": incentive,
-        "is_order": is_order
-    }
+    """Calculates suggested order amount and matrix cook incentive. Delegated to PolicyCalculator (SRP)."""
+    from core.domain.policy import PolicyCalculator
+    return PolicyCalculator().calculate_order_pricing(devotee_count, menu_type, record_type)
 
 def load_env_file():
     """Auto-loads .env file."""
@@ -1851,4 +1816,112 @@ class SheetService:
         output.seek(0)
         return output
 
-service = SheetService()
+_raw_sheet_engine = SheetService()
+
+class KitchenServiceFacade:
+    """
+    Facade Design Pattern:
+    Maintains 100% backward compatibility for all existing callers and tests,
+    while delegating all business operations to decoupled domain services (SRP, ISP, DIP).
+    """
+    def __init__(self, raw_engine):
+        self._engine = raw_engine
+        from core.storage.sheet_storage_backend import SheetStorageBackend
+        from core.container import AppContainer
+        self._storage = SheetStorageBackend(self._engine)
+        self._container = AppContainer(storage_backend=self._storage)
+
+    @property
+    def mode(self):
+        return self._engine.mode
+
+    @property
+    def sheet(self):
+        return self._engine.sheet
+
+    @property
+    def current_tab_name(self):
+        return self._engine.current_tab_name
+
+    @current_tab_name.setter
+    def current_tab_name(self, val):
+        self._engine.current_tab_name = val
+
+    @property
+    def available_tabs(self):
+        return self._engine.available_tabs
+
+    @property
+    def cooks(self):
+        return self._container.cook_service.cooks
+
+    @property
+    def available_vendors(self):
+        return self._container.vendor_service.available_vendors
+
+    @property
+    def vendor_bills(self):
+        return self._container.vendor_service.vendor_bills
+
+    def get_status(self):
+        return self._engine.get_status()
+
+    def get_available_tabs(self, force_refresh: bool = False):
+        return self._engine.get_available_tabs(force_refresh=force_refresh)
+
+    def select_tab(self, tab_name: str):
+        return self._engine.select_tab(tab_name)
+
+    def create_new_sheet(self, sheet_name: str, clone_from: str = "Master_Template"):
+        return self._engine.create_new_sheet(sheet_name, clone_from=clone_from)
+
+    def get_month_records(self, tab_name: Optional[str] = None, force_refresh: bool = False):
+        return self._container.order_service.get_records(tab_name=tab_name, force_refresh=force_refresh)
+
+    def add_record(self, data: Dict[str, Any], tab_name: Optional[str] = None):
+        return self._container.order_service.add_record(data, tab_name=tab_name)
+
+    def update_record(self, record_id: str, updates: Dict[str, Any], tab_name: Optional[str] = None):
+        return self._container.order_service.update_record(record_id, updates, tab_name=tab_name)
+
+    def delete_record(self, record_id: str, tab_name: Optional[str] = None):
+        return self._container.order_service.delete_record(record_id, tab_name=tab_name)
+
+    def get_vendor_records(self, tab_name: Optional[str] = None):
+        return self._container.vendor_service.get_vendor_summary(tab_name=tab_name)
+
+    def add_vendor_entry(self, vendor_name: str, amount: float, date: Optional[str] = None, notes: Optional[str] = None, tab_name: Optional[str] = None):
+        return self._container.vendor_service.add_vendor_bill_entry(vendor_name, amount, date=date, notes=notes, tab_name=tab_name)
+
+    def delete_vendor_entry(self, entry_id: str, tab_name: Optional[str] = None):
+        return self._container.vendor_service.delete_vendor_bill_entry(entry_id, tab_name=tab_name)
+
+    def register_vendor(self, vendor_name: str, initial_amount: float = 0.0, tab_name: Optional[str] = None):
+        return self._container.vendor_service.register_vendor(vendor_name, initial_amount=initial_amount, tab_name=tab_name)
+
+    def update_vendor_record(self, row_number: int, vendor_name: str, amount: float, tab_name: Optional[str] = None):
+        return self._container.vendor_service.update_vendor(row_number, vendor_name, amount, tab_name=tab_name)
+
+    def delete_vendor_record(self, row_number: int, tab_name: Optional[str] = None):
+        return self._container.vendor_service.delete_vendor(row_number, tab_name=tab_name)
+
+    def get_cook_records(self, tab_name: Optional[str] = None):
+        return self._container.cook_service.get_cook_records(tab_name=tab_name)
+
+    def add_cook(self, name: str, base_salary: float, role: Optional[str] = "Cook", festival_allowance: float = 1000.0, yearly_bonus: float = 0.0, tab_name: Optional[str] = None):
+        return self._container.cook_service.add_cook(name, base_salary, role=role, festival_allowance=festival_allowance, yearly_bonus=yearly_bonus, tab_name=tab_name)
+
+    def update_cook(self, cook_id: str, updates: Dict[str, Any], tab_name: Optional[str] = None):
+        return self._container.cook_service.update_cook(cook_id, updates, tab_name=tab_name)
+
+    def delete_cook(self, cook_id: str, tab_name: Optional[str] = None):
+        return self._container.cook_service.delete_cook(cook_id, tab_name=tab_name)
+
+    def generate_excel_export(self, tab_name: Optional[str] = None):
+        return self._container.export_service.export_excel(tab_name=tab_name)
+
+    def invalidate_cache(self, tab_name: Optional[str] = None):
+        self._engine.invalidate_cache(tab_name=tab_name)
+
+service = KitchenServiceFacade(_raw_sheet_engine)
+

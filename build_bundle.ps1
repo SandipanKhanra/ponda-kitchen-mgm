@@ -18,6 +18,10 @@ $files = @(
   "static/js/components/Cooks/CookSection.jsx",
   "static/js/components/Analytics/AnalyticsSection.jsx",
   "static/js/components/Policy/PolicySection.jsx",
+  "static/js/components/Common/CreateSheetModal.jsx",
+  "static/js/components/Orders/OrderModals.jsx",
+  "static/js/components/Vendors/VendorModals.jsx",
+  "static/js/components/Cooks/CookModals.jsx",
   "static/js/components/Modals.jsx",
   "static/js/App.jsx",
   "static/js/index.jsx"
@@ -38,4 +42,3 @@ foreach ($f in $files) {
 $destPath = Join-Path $PSScriptRoot "static/js/app-bundle.jsx"
 [System.IO.File]::WriteAllText($destPath, $bundleContent, [System.Text.Encoding]::UTF8)
 Write-Output "Successfully generated app-bundle.jsx ($(([System.IO.FileInfo]$destPath).Length) bytes)"
-
