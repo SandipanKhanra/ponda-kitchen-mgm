@@ -468,19 +468,22 @@ window.KitchenComponents.App = (() => {
 
     return (
       <div className="app-layout">
-        {/* Top Header */}
-        <Header
-          currentTab={currentTab}
-          availableTabs={availableTabs}
-          onTabChange={handleTabChange}
-          onOpenCreateSheet={() => setIsCreateSheetOpen(true)}
-          syncStatus={syncStatus}
-          theme={theme}
-          onThemeToggle={toggleTheme}
-        />
+        {/* Fixed / Sticky Top Section (Header + 5-Tab Navigation Bar) */}
+        <div className="app-top-section">
+          {/* Top Header */}
+          <Header
+            currentTab={currentTab}
+            availableTabs={availableTabs}
+            onTabChange={handleTabChange}
+            onOpenCreateSheet={() => setIsCreateSheetOpen(true)}
+            syncStatus={syncStatus}
+            theme={theme}
+            onThemeToggle={toggleTheme}
+          />
 
-        {/* 5-Tab Navigation Bar */}
-        <Navigation activePage={activePage} onSelectPage={setActivePage} />
+          {/* 5-Tab Navigation Bar */}
+          <Navigation activePage={activePage} onSelectPage={setActivePage} />
+        </div>
 
         {/* Main Content Area */}
         <main className="main-container">
