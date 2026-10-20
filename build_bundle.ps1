@@ -9,6 +9,7 @@ $files = @(
   "static/js/components/Header.jsx",
   "static/js/components/Navigation.jsx",
   "static/js/components/SyncBanner.jsx",
+  "static/js/components/Common/ModernDonutChart.jsx",
   "static/js/components/Orders/StatsCards.jsx",
   "static/js/components/Orders/OrdersToolbar.jsx",
   "static/js/components/Orders/OrdersTable.jsx",

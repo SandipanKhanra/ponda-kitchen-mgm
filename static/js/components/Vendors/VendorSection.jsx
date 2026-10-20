@@ -7,10 +7,14 @@ window.KitchenComponents.Vendors = window.KitchenComponents.Vendors || {};
 
 window.KitchenComponents.Vendors.VendorSection = (() => {
   const { React } = window;
-  const { formatCurrency } = window.KitchenConstants;
+  const { formatCurrency } = window.KitchenConstants || {};
   const TableLoadingCell =
     window.KitchenComponents?.Common?.TableLoadingCell ||
     window.KitchenComponents?.TableLoadingCell ||
+    (() => null);
+  const ModernDonutChart =
+    window.KitchenComponents?.Common?.ModernDonutChart ||
+    window.KitchenComponents?.ModernDonutChart ||
     (() => null);
 
   function VendorSection({
@@ -28,6 +32,30 @@ window.KitchenComponents.Vendors.VendorSection = (() => {
     const allEntries = vendorsData.all_entries || [];
     const totalExpenses = vendorsData.total_vendor_expenses || 0;
     const netDifference = vendorsData.net_difference || 0;
+
+    // Visual Vendor Purchase Breakdown (% of total budget spent per vendor)
+    const vendorChartItems = React.useMemo(() => {
+      if (!vendors || vendors.length === 0 || totalExpenses <= 0) return [];
+
+      const colors = (window.KitchenConstants && window.KitchenConstants.CHART_COLORS) || [
+        "#4f46e5", "#10b981", "#0284c7", "#f59e0b", "#ec4899",
+        "#8b5cf6", "#14b8a6", "#f97316", "#64748b", "#84cc16"
+      ];
+
+      return [...vendors]
+        .filter((v) => Number(v.amount) > 0)
+        .sort((a, b) => Number(b.amount) - Number(a.amount))
+        .map((v, i) => {
+          const count = Number(v.bill_count) || 0;
+          return {
+            id: `vendor-${v.row_number || i}-${v.vendor_name}`,
+            label: v.vendor_name,
+            value: Number(v.amount) || 0,
+            color: colors[i % colors.length],
+            secondaryLabel: count > 0 ? `${count} ${count === 1 ? 'bill' : 'bills'}` : 'Direct'
+          };
+        });
+    }, [vendors, totalExpenses]);
 
     return (
       <div id="pageVendors" className="app-page active">
@@ -173,6 +201,37 @@ window.KitchenComponents.Vendors.VendorSection = (() => {
               </span>
             </div>
           </div>
+        </section>
+
+        {/* Vendor Purchase Distribution & Expense Share Donut Chart */}
+        <section style={{ marginBottom: "1.75rem" }} aria-label="Vendor Expense Distribution">
+          <ModernDonutChart
+            title="Vendor Purchase Distribution (%)"
+            subtitle="Visual share of grocery, supplies and kitchen purchases allocated per vendor"
+            icon={
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                style={{ color: "var(--warning)" }}
+              >
+                <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                <path d="M22 12A10 10 0 0 0 12 2v10z" />
+              </svg>
+            }
+            items={vendorChartItems}
+            total={totalExpenses}
+            defaultCenterLabel="Total Purchases"
+            defaultCenterSub={
+              vendorChartItems.length > 0
+                ? `${vendorChartItems.length} Active Vendors`
+                : "No Expenses"
+            }
+            emptyMessage="No vendor purchases or bills logged for this month yet. Use 'Add Vendor Bill' to start logging expenses."
+          />
         </section>
 
         {/* 1. Available Vendors Summary Table */}

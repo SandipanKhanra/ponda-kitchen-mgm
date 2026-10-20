@@ -477,6 +477,270 @@ window.KitchenComponents.SyncBanner.SyncBanner = window.KitchenComponents.SyncBa
 
 
 
+// --- Component: static/js/components/Common/ModernDonutChart.jsx ---
+// =============================================================================
+// ModernDonutChart Component
+// High-Fidelity Interactive SVG Donut / Pie Chart with Segmented Slices,
+// Glassmorphic Center Ring, Dynamic Hover Re-centering & Visual Progress Bars
+// =============================================================================
+
+window.KitchenComponents = window.KitchenComponents || {};
+window.KitchenComponents.Common = window.KitchenComponents.Common || {};
+
+window.KitchenComponents.Common.ModernDonutChart = (() => {
+  const { React } = window;
+  const { useState, useMemo } = React;
+
+  const RADIUS = 38;
+  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+  function ModernDonutChart({
+    items = [],
+    total = 0,
+    defaultCenterLabel = 'Total',
+    defaultCenterSub = '',
+    currencyPrefix = '₹',
+    emptyMessage = 'No transaction data recorded for this category yet.',
+    title,
+    subtitle,
+    icon,
+    headerActions,
+    className = ''
+  }) {
+    const [hoveredId, setHoveredId] = useState(null);
+
+    const formatCurrency = (val) => {
+      if (window.KitchenConstants && window.KitchenConstants.formatCurrency) {
+        return window.KitchenConstants.formatCurrency(val);
+      }
+      return Number(val || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    };
+
+    const calculatedTotal = useMemo(() => {
+      if (total > 0) return total;
+      return items.reduce((acc, it) => acc + (Number(it.value) || 0), 0);
+    }, [items, total]);
+
+    // Active hovered item or null
+    const activeItem = useMemo(() => {
+      if (!hoveredId) return null;
+      return items.find((it) => it.id === hoveredId) || null;
+    }, [hoveredId, items]);
+
+    // Segmented Slices Math
+    const slices = useMemo(() => {
+      if (calculatedTotal <= 0 || items.length === 0) return [];
+
+      const gap = items.length > 1 ? 2.2 : 0; // Segment gap in SVG circumference units
+      let accumulatedOffset = 0;
+
+      return items.map((item) => {
+        const val = Number(item.value) || 0;
+        const percentage = calculatedTotal > 0 ? val / calculatedTotal : 0;
+        const sliceArc = percentage * CIRCUMFERENCE;
+
+        // Gap subtraction for crisp modern segmented look
+        const strokeLength = sliceArc > gap ? sliceArc - gap : sliceArc;
+        const strokeDasharray = `${strokeLength} ${CIRCUMFERENCE - strokeLength}`;
+        const strokeDashoffset = -accumulatedOffset;
+        accumulatedOffset += sliceArc;
+
+        return {
+          ...item,
+          val,
+          percentage: (percentage * 100).toFixed(1),
+          strokeDasharray,
+          strokeDashoffset
+        };
+      });
+    }, [items, calculatedTotal]);
+
+    // Center display values based on hover state
+    const displayAmount = activeItem ? activeItem.value : calculatedTotal;
+    const displayLabel = activeItem ? activeItem.label : defaultCenterLabel;
+    const displaySub = activeItem
+      ? `${((activeItem.value / (calculatedTotal || 1)) * 100).toFixed(1)}% Share`
+      : (defaultCenterSub || (items.length > 0 ? `${items.length} ${items.length === 1 ? 'entry' : 'entries'}` : ''));
+
+    return (
+      <div className={`modern-chart-card ${className}`}>
+        {/* Optional Header with Title & Action Controls */}
+        {(title || headerActions) && (
+          <div className="modern-chart-header">
+            <div className="modern-chart-title-group">
+              {icon && <span className="modern-chart-icon">{icon}</span>}
+              <div>
+                {title && <h3 className="section-title" style={{ margin: 0, fontSize: '1.1rem' }}>{title}</h3>}
+                {subtitle && <p className="modern-chart-subtitle">{subtitle}</p>}
+              </div>
+            </div>
+            {headerActions && <div className="modern-chart-actions">{headerActions}</div>}
+          </div>
+        )}
+
+        {/* Main Visual Grid: Left Donut SVG, Right Interactive Legend Cards */}
+        <div className="modern-chart-grid">
+          {/* Left: Donut Chart Disc */}
+          <div className="chart-wrapper">
+            <svg viewBox="0 0 100 100" className="donut-svg" aria-label="Visual Distribution Chart">
+              <defs>
+                <filter id="activeSliceGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="1.5" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+
+              {/* Background Concentric Subtle Track Ring */}
+              <circle
+                cx="50"
+                cy="50"
+                r={RADIUS}
+                fill="none"
+                stroke="var(--border-subtle)"
+                strokeWidth="11"
+                opacity="0.8"
+              />
+
+              {calculatedTotal === 0 || slices.length === 0 ? (
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={RADIUS}
+                  fill="none"
+                  stroke="var(--border-color)"
+                  strokeWidth="11"
+                  strokeDasharray="4 4"
+                />
+              ) : (
+                slices.map((slice) => {
+                  const isHovered = hoveredId === slice.id;
+                  const isDimmed = Boolean(hoveredId && !isHovered);
+
+                  return (
+                    <circle
+                      key={slice.id}
+                      cx="50"
+                      cy="50"
+                      r={RADIUS}
+                      fill="none"
+                      stroke={slice.color}
+                      strokeWidth={isHovered ? 14 : 11}
+                      strokeDasharray={slice.strokeDasharray}
+                      strokeDashoffset={slice.strokeDashoffset}
+                      opacity={isDimmed ? 0.32 : 1}
+                      filter={isHovered ? 'url(#activeSliceGlow)' : undefined}
+                      style={{
+                        cursor: 'pointer',
+                        transition: 'stroke-width 0.25s ease, opacity 0.25s ease, filter 0.25s ease'
+                      }}
+                      onMouseEnter={() => setHoveredId(slice.id)}
+                      onMouseLeave={() => setHoveredId(null)}
+                    >
+                      <title>{slice.label}: {currencyPrefix}{formatCurrency(slice.val)} ({slice.percentage}%)</title>
+                    </circle>
+                  );
+                })
+              )}
+            </svg>
+
+            {/* Glassmorphic Center Informational Disc */}
+            <div className="donut-center-text">
+              <span className="donut-center-amount">
+                {currencyPrefix}{formatCurrency(displayAmount)}
+              </span>
+              <span className="donut-center-label" title={displayLabel}>
+                {displayLabel}
+              </span>
+              {displaySub && (
+                <span className={`donut-center-sub ${activeItem ? 'active-share' : ''}`}>
+                  {displaySub}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Legend Breakdown List with Micro Progress Bars */}
+          <div className="modern-legend-list" role="list" aria-label="Distribution Legend">
+            {slices.length === 0 ? (
+              <div className="modern-chart-empty">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ opacity: 0.5, marginBottom: '0.4rem' }}>
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <p style={{ margin: 0 }}>{emptyMessage}</p>
+              </div>
+            ) : (
+              slices.map((slice) => {
+                const isHovered = hoveredId === slice.id;
+                const isDimmed = Boolean(hoveredId && !isHovered);
+
+                return (
+                  <div
+                    key={slice.id}
+                    className={`modern-legend-item ${isHovered ? 'active' : ''} ${isDimmed ? 'dimmed' : ''}`}
+                    onMouseEnter={() => setHoveredId(slice.id)}
+                    onMouseLeave={() => setHoveredId(null)}
+                    role="listitem"
+                  >
+                    <div className="legend-item-main">
+                      <div className="legend-label-group">
+                        <span
+                          className="legend-color-dot"
+                          style={{
+                            backgroundColor: slice.color,
+                            boxShadow: isHovered ? `0 0 8px ${slice.color}` : `0 0 0 1px rgba(0,0,0,0.06)`
+                          }}
+                        />
+                        <div className="legend-names">
+                          <span className="legend-primary-label">{slice.label}</span>
+                          {slice.secondaryLabel && (
+                            <span className="legend-sec-badge">{slice.secondaryLabel}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="legend-value-group">
+                        <span className="legend-amount">{currencyPrefix}{formatCurrency(slice.val)}</span>
+                        <span
+                          className="legend-pct-badge"
+                          style={{
+                            backgroundColor: `${slice.color}22`,
+                            color: slice.color,
+                            borderColor: `${slice.color}44`
+                          }}
+                        >
+                          {slice.percentage}%
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Visual Proportion Progress Bar */}
+                    <div className="legend-bar-track">
+                      <div
+                        className="legend-bar-fill"
+                        style={{
+                          width: `${slice.percentage}%`,
+                          backgroundColor: slice.color
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return React.memo ? React.memo(ModernDonutChart) : ModernDonutChart;
+})();
+
+window.KitchenComponents.ModernDonutChart = window.KitchenComponents.Common.ModernDonutChart;
+
+
 // --- Component: static/js/components/Orders/StatsCards.jsx ---
 // =============================================================================
 // Orders & Sponsors KPI Stats Cards
@@ -1174,10 +1438,14 @@ window.KitchenComponents.Vendors = window.KitchenComponents.Vendors || {};
 
 window.KitchenComponents.Vendors.VendorSection = (() => {
   const { React } = window;
-  const { formatCurrency } = window.KitchenConstants;
+  const { formatCurrency } = window.KitchenConstants || {};
   const TableLoadingCell =
     window.KitchenComponents?.Common?.TableLoadingCell ||
     window.KitchenComponents?.TableLoadingCell ||
+    (() => null);
+  const ModernDonutChart =
+    window.KitchenComponents?.Common?.ModernDonutChart ||
+    window.KitchenComponents?.ModernDonutChart ||
     (() => null);
 
   function VendorSection({
@@ -1195,6 +1463,30 @@ window.KitchenComponents.Vendors.VendorSection = (() => {
     const allEntries = vendorsData.all_entries || [];
     const totalExpenses = vendorsData.total_vendor_expenses || 0;
     const netDifference = vendorsData.net_difference || 0;
+
+    // Visual Vendor Purchase Breakdown (% of total budget spent per vendor)
+    const vendorChartItems = React.useMemo(() => {
+      if (!vendors || vendors.length === 0 || totalExpenses <= 0) return [];
+
+      const colors = (window.KitchenConstants && window.KitchenConstants.CHART_COLORS) || [
+        "#4f46e5", "#10b981", "#0284c7", "#f59e0b", "#ec4899",
+        "#8b5cf6", "#14b8a6", "#f97316", "#64748b", "#84cc16"
+      ];
+
+      return [...vendors]
+        .filter((v) => Number(v.amount) > 0)
+        .sort((a, b) => Number(b.amount) - Number(a.amount))
+        .map((v, i) => {
+          const count = Number(v.bill_count) || 0;
+          return {
+            id: `vendor-${v.row_number || i}-${v.vendor_name}`,
+            label: v.vendor_name,
+            value: Number(v.amount) || 0,
+            color: colors[i % colors.length],
+            secondaryLabel: count > 0 ? `${count} ${count === 1 ? 'bill' : 'bills'}` : 'Direct'
+          };
+        });
+    }, [vendors, totalExpenses]);
 
     return (
       <div id="pageVendors" className="app-page active">
@@ -1340,6 +1632,37 @@ window.KitchenComponents.Vendors.VendorSection = (() => {
               </span>
             </div>
           </div>
+        </section>
+
+        {/* Vendor Purchase Distribution & Expense Share Donut Chart */}
+        <section style={{ marginBottom: "1.75rem" }} aria-label="Vendor Expense Distribution">
+          <ModernDonutChart
+            title="Vendor Purchase Distribution (%)"
+            subtitle="Visual share of grocery, supplies and kitchen purchases allocated per vendor"
+            icon={
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                style={{ color: "var(--warning)" }}
+              >
+                <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                <path d="M22 12A10 10 0 0 0 12 2v10z" />
+              </svg>
+            }
+            items={vendorChartItems}
+            total={totalExpenses}
+            defaultCenterLabel="Total Purchases"
+            defaultCenterSub={
+              vendorChartItems.length > 0
+                ? `${vendorChartItems.length} Active Vendors`
+                : "No Expenses"
+            }
+            emptyMessage="No vendor purchases or bills logged for this month yet. Use 'Add Vendor Bill' to start logging expenses."
+          />
         </section>
 
         {/* 1. Available Vendors Summary Table */}
@@ -1856,9 +2179,6 @@ window.KitchenComponents.Analytics.AnalyticsSection = (() => {
     "#8b5cf6", "#14b8a6", "#f97316", "#64748b", "#84cc16"
   ];
 
-  const RADIUS = 38;
-  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-
   const BIFURCATION_TABS = [
     { id: 'type', label: 'By Type' },
     { id: 'payment', label: 'Payment Mode' },
@@ -1872,7 +2192,6 @@ window.KitchenComponents.Analytics.AnalyticsSection = (() => {
 
     const constants = window.KitchenConstants || {};
     const chartColors = constants.CHART_COLORS || DEFAULT_COLORS;
-    const formatCurrency = constants.formatCurrency || ((v) => Number(v || 0).toLocaleString("en-IN"));
 
     const { dataset, title } = useMemo(() => {
       let data = {};
@@ -1908,36 +2227,44 @@ window.KitchenComponents.Analytics.AnalyticsSection = (() => {
       return items.reduce((acc, [_, val]) => acc + val, 0);
     }, [items]);
 
-    // Donut SVG Arc Math (Memoized for high performance)
-    const slices = useMemo(() => {
-      let accumulatedOffset = 0;
-
+    const chartItems = useMemo(() => {
       return items.map(([label, value], i) => {
-        const percentage = total > 0 ? value / total : 0;
-        const strokeDasharray = `${percentage * CIRCUMFERENCE} ${CIRCUMFERENCE}`;
-        const strokeDashoffset = -accumulatedOffset;
-        accumulatedOffset += percentage * CIRCUMFERENCE;
-
         let color = chartColors[i % chartColors.length];
         if (activeBifurcation === 'status') {
           const lbl = label.toLowerCase();
           if (lbl === 'paid' || lbl === 'received') color = '#10b981';
           else if (lbl === 'pending') color = '#f59e0b';
         }
-
         return {
+          id: `bifurcation-${label}`,
           label,
           value,
-          percentage: (percentage * 100).toFixed(1),
           color,
-          strokeDasharray,
-          strokeDashoffset
+          secondaryLabel: null
         };
       });
-    }, [items, total, activeBifurcation, chartColors]);
+    }, [items, activeBifurcation, chartColors]);
 
     const KC = window.KitchenComponents || {};
     const StatsCards = KC.Orders?.StatsCards?.StatsCards || KC.Orders?.StatsCards || KC.StatsCards || (() => null);
+    const ModernDonutChart = KC.Common?.ModernDonutChart || KC.ModernDonutChart || (() => null);
+
+    const tabsHeader = (
+      <div className="bifurcation-tabs" role="tablist" aria-label="Bifurcation filters">
+        {BIFURCATION_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            className={`bifurcation-tab-btn ${activeBifurcation === tab.id ? 'active' : ''}`}
+            onClick={() => setActiveBifurcation(tab.id)}
+            role="tab"
+            aria-selected={activeBifurcation === tab.id}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+    );
 
     return (
       <div id="pageAnalytics" className="app-page active">
@@ -1956,90 +2283,23 @@ window.KitchenComponents.Analytics.AnalyticsSection = (() => {
           <StatsCards metrics={metrics} />
         </div>
 
-        {/* Main Analytics Card */}
-        <div className="analytics-section">
-          {/* Analytics Header with Title & Bifurcation Tabs */}
-          <div className="analytics-header">
-            <div className="analytics-title-group">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--primary)' }}>
-                <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
-                <path d="M22 12A10 10 0 0 0 12 2v10z" />
-              </svg>
-              <h3 className="section-title" style={{ margin: 0 }}>Collections Breakdown</h3>
-            </div>
-
-            <div className="bifurcation-tabs" role="tablist" aria-label="Bifurcation filters">
-              {BIFURCATION_TABS.map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  className={`bifurcation-tab-btn ${activeBifurcation === tab.id ? 'active' : ''}`}
-                  onClick={() => setActiveBifurcation(tab.id)}
-                  role="tab"
-                  aria-selected={activeBifurcation === tab.id}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Analytics Visual Grid: Left Donut, Right Legend */}
-          <div className="analytics-grid">
-            {/* Left: Donut Chart with Centered Metric Info */}
-            <div className="chart-wrapper">
-              <svg viewBox="0 0 100 100" id="donutSvg" className="donut-svg" aria-label="Donut Chart">
-                {total === 0 || slices.length === 0 ? (
-                  <circle cx="50" cy="50" r={RADIUS} fill="none" stroke="var(--border-color)" strokeWidth="14" />
-                ) : (
-                  slices.map((slice) => (
-                    <circle
-                      key={slice.label}
-                      cx="50"
-                      cy="50"
-                      r={RADIUS}
-                      fill="none"
-                      stroke={slice.color}
-                      strokeWidth="14"
-                      strokeDasharray={slice.strokeDasharray}
-                      strokeDashoffset={slice.strokeDashoffset}
-                      style={{ transition: 'stroke-dasharray 0.4s ease, stroke-dashoffset 0.4s ease, stroke 0.3s ease' }}
-                    >
-                      <title>{slice.label}: ₹{formatCurrency(slice.value)} ({slice.percentage}%)</title>
-                    </circle>
-                  ))
-                )}
-              </svg>
-
-              <div className="donut-center-text">
-                <span id="donutCenterAmount" className="donut-center-amount">₹{formatCurrency(total)}</span>
-                <span id="donutCenterLabel" className="donut-center-label">{title}</span>
-              </div>
-            </div>
-
-            {/* Right: Legend Breakdown List */}
-            <div className="chart-legend-list" id="chartLegendList">
-              {slices.length === 0 ? (
-                <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem', padding: '2.5rem 1rem', background: 'var(--border-subtle)', borderRadius: 'var(--radius-md)' }}>
-                  No transaction data recorded for this category yet.
-                </div>
-              ) : (
-                slices.map((slice) => (
-                  <div key={slice.label} className="legend-item">
-                    <div className="legend-label-group">
-                      <span className="legend-color-dot" style={{ backgroundColor: slice.color }}></span>
-                      <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{slice.label}</span>
-                    </div>
-                    <div className="legend-value-group">
-                      <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>₹{formatCurrency(slice.value)}</span>
-                      <span className="legend-pct-badge">{slice.percentage}%</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
+        {/* Modern Interactive Donut Chart */}
+        <ModernDonutChart
+          title="Collections Breakdown"
+          subtitle="Interactive donation revenue bifurcation across channels"
+          icon={
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--primary)' }}>
+              <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+              <path d="M22 12A10 10 0 0 0 12 2v10z" />
+            </svg>
+          }
+          headerActions={tabsHeader}
+          items={chartItems}
+          total={total}
+          defaultCenterLabel={title}
+          defaultCenterSub="Total Collections"
+          emptyMessage="No transaction data recorded for this category yet."
+        />
       </div>
     );
   }

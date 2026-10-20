@@ -33,6 +33,7 @@ The application is powered by **React 19** utilizing modern concurrent rendering
 
 2. **Vendor Accounts & Multi-Bill Logging**:
    - Vendor directory management and itemized grocery/supply bills.
+   - Interactive **Vendor Purchase Distribution (%) Donut Chart** visualizing each vendor's expense allocation share, dynamic hover re-centering, and animated visual progress bars.
    - Auto-calculated expenditures, total payments, and debit/credit balance reconciliation.
 
 3. **Cook Management & Payroll**:
@@ -75,6 +76,9 @@ static/
     │   ├── Header.jsx         # Topbar, month selector, new sheet trigger, theme toggle
     │   ├── Navigation.jsx     # Tab bar with smooth transition indicator
     │   ├── SyncBanner.jsx     # Live Google Sheet status and direct link
+    │   ├── Common/
+    │   │   ├── ModernDonutChart.jsx   # Interactive SVG donut/pie chart with segmented rings & progress bars
+    │   │   └── CreateSheetModal.jsx   # Master Template cloner modal
     │   ├── Orders/
     │   │   ├── StatsCards.jsx         # KPI summary cards
     │   │   ├── OrdersToolbar.jsx      # Search, 4-filter dropdowns, refresh & export
@@ -82,7 +86,7 @@ static/
     │   │   ├── OrdersMobileCards.jsx  # Mobile cards view with Card/Table toggle
     │   │   └── Pagination.jsx         # Pagination controls
     │   ├── Vendors/
-    │   │   └── VendorSection.jsx      # Available vendors & itemized grocery bills log
+    │   │   └── VendorSection.jsx      # Vendor breakdown pie chart, accounts & itemized grocery bills log
     │   ├── Cooks/
     │   │   └── CookSection.jsx        # Cook payroll cards & policy incentive calculator
     │   ├── Analytics/
@@ -91,7 +95,7 @@ static/
     │   │   └── PolicySection.jsx      # Official kitchen rules, matrix table & PDF viewer
     │   └── Modals.jsx                 # Accessible modals with in-button spinners
     ├── App.jsx                # Root orchestrator managing state, lifecycle, and tabs
-    ├── index.jsx              # React 18 DOM mount point
+    ├── index.jsx              # React 19 DOM mount point
     └── app-bundle.jsx         # Compiled production bundle
 ```
 
