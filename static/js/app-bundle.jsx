@@ -741,6 +741,7 @@ window.KitchenComponents.Common.ModernDonutChart = (() => {
 window.KitchenComponents.ModernDonutChart = window.KitchenComponents.Common.ModernDonutChart;
 
 
+
 // --- Component: static/js/components/Orders/StatsCards.jsx ---
 // =============================================================================
 // Orders & Sponsors KPI Stats Cards
@@ -1063,9 +1064,32 @@ window.KitchenComponents.Orders.OrdersTable = (() => {
     onEditRecord,
     onDeleteRecord
   }) {
+    const scrollWrapperRef = React.useRef(null);
+
+    React.useEffect(() => {
+      const el = scrollWrapperRef.current;
+      if (!el) return;
+
+      const onWheel = (e) => {
+        if (el.scrollWidth > el.clientWidth) {
+          if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && !e.shiftKey) {
+            const atLeft = el.scrollLeft <= 0 && e.deltaY < 0;
+            const atRight = Math.ceil(el.scrollLeft + el.clientWidth) >= el.scrollWidth && e.deltaY > 0;
+            if (!atLeft && !atRight) {
+              el.scrollLeft += e.deltaY;
+              e.preventDefault();
+            }
+          }
+        }
+      };
+
+      el.addEventListener('wheel', onWheel, { passive: false });
+      return () => el.removeEventListener('wheel', onWheel);
+    }, []);
+
     return (
-      <div className="table-scroll-wrapper" id="recordsTableWrapper">
-        <table className="data-table" aria-label="Transactions table">
+      <div className="table-scroll-wrapper" id="recordsTableWrapper" ref={scrollWrapperRef}>
+        <table className="data-table orders-table" aria-label="Transactions table">
           <thead>
             <tr>
               <th scope="col" style={{ width: '95px' }}>Date</th>
@@ -1100,28 +1124,33 @@ window.KitchenComponents.Orders.OrdersTable = (() => {
                 return (
                   <tr key={r.id}>
                     <td>
-                      <span style={{ fontWeight: 600, color: 'var(--text-muted)' }}>{r.date}</span>
+                      <span className="order-date-text">{r.date}</span>
                     </td>
                     <td>
-                      <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{r.person_name}</div>
+                      <div className="order-person-name">{r.person_name}</div>
+                      {r.notes ? (
+                        <div className="order-notes-subtitle" title={r.notes}>
+                          📝 {r.notes}
+                        </div>
+                      ) : null}
                     </td>
                     <td>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{r.program || '—'}</span>
+                      <span className="order-program-text">{r.program || '—'}</span>
                     </td>
                     <td>
                       <TypeBadge type={r.type} />
                     </td>
                     <td>
-                      <span style={{ fontWeight: 600 }}>{devCount}</span>
+                      <span className="order-devotees-count">{devCount}</span>
                     </td>
                     <td>
                       <span className="category-tag">{menuType}</span>
                     </td>
                     <td>
-                      <span style={{ color: 'var(--primary)', fontWeight: 700 }}>{inc}</span>
+                      <span className="order-cook-share">{inc}</span>
                     </td>
                     <td>
-                      <span className="amount-display">₹{formatCurrency(r.amount)}</span>
+                      <span className="amount-display order-amount-text">₹{formatCurrency(r.amount)}</span>
                     </td>
                     <td>
                       <PaymentBadge paymentThrough={r.payment_through} />
@@ -4450,7 +4479,7 @@ window.KitchenComponents.App = (() => {
                 </div>
 
                 {/* Desktop / Tablet Table */}
-                <div className={mobileRecordView === 'cards' ? 'hide-mobile' : ''}>
+                <div className={`orders-table-wrapper ${mobileRecordView === 'cards' ? 'hide-mobile' : ''}`}>
                   <OrdersTable
                     records={paginatedRecords}
                     isLoading={isRecordsLoading}

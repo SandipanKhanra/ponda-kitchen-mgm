@@ -41,10 +41,6 @@ a {
 }
 
 /* Utility Helpers */
-.hide-mobile {
-  display: inline-flex;
-}
-
 .sr-only {
   position: absolute;
   width: 1px;

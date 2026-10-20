@@ -201,5 +201,7 @@
   justify-content: flex-end;
   gap: 0.45rem;
   width: 100%;
+  white-space: nowrap;
+  flex-wrap: nowrap;
 }
 

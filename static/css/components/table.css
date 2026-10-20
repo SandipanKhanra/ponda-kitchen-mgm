@@ -35,9 +35,34 @@
 }
 
 .table-scroll-wrapper {
+  display: block;
   overflow-x: auto;
+  overflow-y: hidden;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) var(--border-subtle);
+}
+
+.table-scroll-wrapper::-webkit-scrollbar {
+  height: 10px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-track {
+  background: var(--border-subtle);
+  border-radius: var(--radius-full);
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--border-subtle);
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-hover);
 }
 
 /* Data Table */

@@ -144,9 +144,11 @@ def parse_int(val: Any) -> int:
         return 0
 
 def normalize_sheet_date(date_val: Any) -> str:
-    """Normalizes YYYY-MM-DD (from HTML5 date pickers) or existing date into DD/MM/YYYY."""
+    """Normalizes YYYY-MM-DD (from HTML5 date pickers), datetime objects, or existing date into DD/MM/YYYY."""
     if not date_val:
         return datetime.now().strftime("%d/%m/%Y")
+    if isinstance(date_val, datetime):
+        return date_val.strftime("%d/%m/%Y")
     d_str = str(date_val).strip()
     if "-" in d_str and len(d_str.split("-")) == 3:
         parts = d_str.split("-")
@@ -305,13 +307,27 @@ class SheetService:
                 print(f"[SheetService] Error fetching tabs: {e}")
                 return self.available_tabs
         else:
+            tabs = list(self.available_tabs)
             if OPENPYXL_AVAILABLE and os.path.exists(EXCEL_FILE_PATH):
                 try:
                     wb = openpyxl.load_workbook(EXCEL_FILE_PATH, read_only=True)
-                    self.available_tabs = wb.sheetnames
+                    for s in wb.sheetnames:
+                        if s not in tabs:
+                            tabs.append(s)
                 except Exception:
                     pass
-            return self.available_tabs
+            # Also discover standalone month files like Kitchen_Accountability_Feb_27.xlsx
+            try:
+                base_dir = os.path.dirname(__file__)
+                for f in os.listdir(base_dir):
+                    if f.startswith("Kitchen_Accountability_") and f.endswith(".xlsx"):
+                        t_name = f[len("Kitchen_Accountability_"):-len(".xlsx")].replace("_", " ").strip()
+                        if t_name and t_name not in tabs:
+                            tabs.append(t_name)
+            except Exception:
+                pass
+            self.available_tabs = tabs
+            return tabs
 
 
 
@@ -350,6 +366,223 @@ class SheetService:
         self._records_cache[target_tab] = {"data": result, "time": now}
         return result
 
+    @staticmethod
+    def _detect_order_layout(all_rows: List[List[Any]]) -> Dict[str, Any]:
+        """
+        Dynamically detects the order table column layout and header row.
+        Supports:
+          1. Legacy / Original Sheets (e.g. 'August 26', 'Jan 26', 'Sept 25'):
+             Columns start at D (0-indexed 3) with headers on Row 2:
+             Original columns:
+               Col D (3): Date
+               Col E (4): Person name
+               Col F (5): Program
+               Col G (6): Type
+               Col H (7): Payment through
+               Col I (8): Amount
+               Col J (9): Paymt Rcvd
+             New columns added accordingly:
+               Col K (10): No. of Devotees
+               Col L (11): Menu Type
+               Col M (12): Order Incentive
+               Col N (13): Notes
+          2. Modern / Template Sheets (e.g. 'April 26', 'Nov 26', 'Master_Template'):
+             Columns start at D (0-indexed 3) with headers on Row 2:
+               Col D (3): Date
+               Col E (4): Person name
+               Col F (5): Program
+               Col G (6): Type
+               Col H (7): No. of Devotees
+               Col I (8): Menu Type
+               Col J (9): Order Incentive
+               Col K (10): Amount
+               Col L (11): Payment through
+               Col M (12): Paymt Rcvd
+               Col N (13): Notes
+          3. Standalone / A1-based Sheets (e.g. 'Kitchen_Accountability_Feb_27.xlsx'):
+             Columns start at A (0-indexed 0) with headers on Row 1 (or 2):
+               Col A (0): Date .. Col K (10): Notes
+        """
+        default_layout = {
+            "layout_type": "template_orders",
+            "header_row_idx": 2,
+            "data_start_row": 3,
+            "start_col_idx": 3,
+            "end_col_idx": 13,
+            "start_col_letter": "D",
+            "end_col_letter": "N",
+            "col_map": {
+                "date": 3,
+                "person_name": 4,
+                "program": 5,
+                "type": 6,
+                "number_of_devotees": 7,
+                "menu_type": 8,
+                "cook_incentive": 9,
+                "amount": 10,
+                "payment_through": 11,
+                "payment_received": 12,
+                "notes": 13
+            }
+        }
+
+        if not all_rows:
+            return default_layout
+
+        header_row_idx = None
+        date_col_idx = None
+
+        for r_i in range(min(4, len(all_rows))):
+            row = all_rows[r_i][:15]
+            row_strs = [str(c or "").strip().lower() for c in row]
+            for c_i, c_text in enumerate(row_strs):
+                if "date" in c_text and c_i < 15:
+                    order_indicators = ["person", "name", "type", "program", "amount", "payment", "rcvd"]
+                    if sum(1 for ind in order_indicators if any(ind in s for s in row_strs)) >= 2:
+                        header_row_idx = r_i + 1
+                        date_col_idx = c_i
+                        break
+            if header_row_idx is not None:
+                break
+
+        if header_row_idx is None:
+            if len(all_rows) > 0 and "date" in str(all_rows[0][0] or "").lower():
+                header_row_idx = 1
+                date_col_idx = 0
+            elif len(all_rows) > 1 and "date" in str(all_rows[1][0] or "").lower():
+                header_row_idx = 2
+                date_col_idx = 0
+            else:
+                header_row_idx = 2
+                date_col_idx = 3
+
+        start_col = date_col_idx
+        h_cells = all_rows[header_row_idx - 1][:15] if header_row_idx <= len(all_rows) else []
+        h_strs = [str(c or "").strip().lower() for c in h_cells]
+
+        # Check for legacy format (Col H / idx 7 is 'Payment through')
+        is_legacy = False
+        if start_col == 3 and len(h_strs) > 7:
+            if "payment" in h_strs[7] or "through" in h_strs[7] or "mode" in h_strs[7] or "pay" in h_strs[7]:
+                is_legacy = True
+            elif len(h_strs) > 8 and "amount" in h_strs[8]:
+                is_legacy = True
+
+        if is_legacy:
+            layout_type = "legacy_orders"
+            col_map = {
+                "date": 3,
+                "person_name": 4,
+                "program": 5,
+                "type": 6,
+                "payment_through": 7,
+                "amount": 8,
+                "payment_received": 9,
+                "number_of_devotees": 10,
+                "menu_type": 11,
+                "cook_incentive": 12,
+                "notes": 13
+            }
+            start_letter = "D"
+            end_letter = "N"
+            start_col_idx = 3
+            end_col_idx = 13
+        elif start_col == 3:
+            layout_type = "template_orders"
+            col_map = {
+                "date": 3,
+                "person_name": 4,
+                "program": 5,
+                "type": 6,
+                "number_of_devotees": 7,
+                "menu_type": 8,
+                "cook_incentive": 9,
+                "amount": 10,
+                "payment_through": 11,
+                "payment_received": 12,
+                "notes": 13
+            }
+            start_letter = "D"
+            end_letter = "N"
+            start_col_idx = 3
+            end_col_idx = 13
+        else:
+            layout_type = "a1_orders"
+            col_map = {
+                "date": 0,
+                "person_name": 1,
+                "program": 2,
+                "type": 3,
+                "number_of_devotees": 4,
+                "menu_type": 5,
+                "cook_incentive": 6,
+                "amount": 7,
+                "payment_through": 8,
+                "payment_received": 9,
+                "notes": 10
+            }
+            start_letter = "A"
+            end_letter = "K"
+            start_col_idx = 0
+            end_col_idx = 10
+
+        return {
+            "layout_type": layout_type,
+            "header_row_idx": header_row_idx,
+            "data_start_row": header_row_idx + 1,
+            "start_col_idx": start_col_idx,
+            "end_col_idx": end_col_idx,
+            "start_col_letter": start_letter,
+            "end_col_letter": end_letter,
+            "col_map": col_map
+        }
+
+    @staticmethod
+    def _format_order_row_for_layout(layout: Dict[str, Any], data: Dict[str, Any]) -> List[Any]:
+        layout_type = layout["layout_type"]
+        rec_type = str(data.get("type") or "Order").strip()
+        is_order = (rec_type.lower() == "order")
+
+        devs_val = parse_int(data.get("number_of_devotees", 0)) if is_order else 0
+        devs_cell = devs_val if (is_order and devs_val > 0) else ""
+
+        inc_val = float(data.get("cook_incentive", 0.0)) if is_order else 0.0
+        inc_clean = int(inc_val) if inc_val.is_integer() else round(inc_val, 2)
+        inc_cell = inc_clean if (is_order and inc_val > 0) else ""
+        menu_type_cell = str(data.get("menu_type") or "") if is_order else ""
+
+        amount_val = parse_num(data.get("amount", 0))
+        amt_clean = int(amount_val) if amount_val.is_integer() else round(amount_val, 2)
+        amt_cell = amt_clean if amount_val > 0 else ""
+
+        date_cell = normalize_sheet_date(data.get("date"))
+        person_cell = str(data.get("person_name") or "")
+        program_cell = str(data.get("program") or "")
+        paym_cell = str(data.get("payment_through") or "Cash")
+        rcvd_cell = str(data.get("payment_received") or "Yes")
+        notes_cell = str(data.get("notes") or "").strip()
+
+        if layout_type == "legacy_orders":
+            # Original columns: Date, Person, Program, Type, Payment through, Amount, Paymt Rcvd
+            # Followed by new columns: Devotees, Menu Type, Order Incentive, Notes
+            return [
+                date_cell, person_cell, program_cell, rec_type,
+                paym_cell, amt_cell, rcvd_cell,
+                devs_cell, menu_type_cell, inc_cell, notes_cell
+            ]
+        elif layout_type == "a1_orders":
+            return [
+                date_cell, person_cell, program_cell, rec_type,
+                devs_cell, menu_type_cell, inc_cell, amt_cell,
+                paym_cell, rcvd_cell, notes_cell
+            ]
+        else: # template_orders
+            return [
+                date_cell, person_cell, program_cell, rec_type,
+                devs_cell, menu_type_cell, inc_cell, amt_cell,
+                paym_cell, rcvd_cell, notes_cell
+            ]
+
     def _get_google_records(self, target_tab: str) -> Dict[str, Any]:
         try:
             ws = self.sheet.worksheet(target_tab) if self.sheet else None
@@ -359,27 +592,31 @@ class SheetService:
             all_rows = ws.get_all_values()
             records = []
 
+            layout = self._detect_order_layout(all_rows)
+            start_row = layout["data_start_row"]
+            cmap = layout["col_map"]
+
             for idx, r in enumerate(all_rows, start=1):
-                if idx < 3:
+                if idx < start_row:
                     continue
                 if idx > 40:
                     break
 
                 # Stop reading when reaching total row or summary row
-                if any("total:" in str(cell).strip().lower() for cell in r[:14]):
+                if any("total:" in str(cell).strip().lower() for cell in r[:15]):
                     break
 
-                date_val = r[3].strip() if len(r) > 3 else ""
-                person_name = r[4].strip() if len(r) > 4 else ""
-                program = r[5].strip() if len(r) > 5 else ""
-                type_val = r[6].strip() if len(r) > 6 else "Order"
-                devotees_val = parse_int(r[7]) if len(r) > 7 else 0
-                menu_val = r[8].strip() if len(r) > 8 else ""
-                incentive_val = parse_num(r[9]) if len(r) > 9 else 0.0
-                amount_val = parse_num(r[10]) if len(r) > 10 else 0.0
-                payment_through = r[11].strip() if len(r) > 11 else "Cash"
-                paymt_rcvd = r[12].strip() if len(r) > 12 else "Yes"
-                notes_val = r[13].strip() if len(r) > 13 else ""
+                date_val = str(r[cmap["date"]]).strip() if len(r) > cmap["date"] else ""
+                person_name = str(r[cmap["person_name"]]).strip() if len(r) > cmap["person_name"] else ""
+                program = str(r[cmap["program"]]).strip() if len(r) > cmap["program"] else ""
+                type_val = str(r[cmap["type"]]).strip() if len(r) > cmap["type"] else "Order"
+                devotees_val = parse_int(r[cmap["number_of_devotees"]]) if len(r) > cmap["number_of_devotees"] else 0
+                menu_val = str(r[cmap["menu_type"]]).strip() if len(r) > cmap["menu_type"] else ""
+                incentive_val = parse_num(r[cmap["cook_incentive"]]) if len(r) > cmap["cook_incentive"] else 0.0
+                amount_val = parse_num(r[cmap["amount"]]) if len(r) > cmap["amount"] else 0.0
+                payment_through = str(r[cmap["payment_through"]]).strip() if len(r) > cmap["payment_through"] else "Cash"
+                paymt_rcvd = str(r[cmap["payment_received"]]).strip() if len(r) > cmap["payment_received"] else "Yes"
+                notes_val = str(r[cmap["notes"]]).strip() if len(r) > cmap["notes"] else ""
 
                 is_order = (type_val.strip().lower() == "order")
                 if not is_order:
@@ -1235,85 +1472,70 @@ class SheetService:
     def _add_google_record(self, data: Dict[str, Any], target_tab: str) -> Dict[str, Any]:
         ws = self.sheet.worksheet(target_tab)
         all_rows = ws.get_all_values()
+        layout = self._detect_order_layout(all_rows)
+        cmap = layout["col_map"]
+        start_letter = layout["start_col_letter"]
+        end_letter = layout["end_col_letter"]
+        h_row = layout["header_row_idx"]
+        layout_type = layout["layout_type"]
 
-        # Ensure D2:M2 headers exist
-        if len(all_rows) >= 2:
-            r2 = all_rows[1]
-            if len(r2) < 13 or (len(r2) > 7 and r2[7] != "No. of Devotees"):
+        # Ensure header row has new columns labeled if not already present
+        if layout_type == "legacy_orders":
+            h_cells = all_rows[h_row - 1] if len(all_rows) >= h_row else []
+            if len(h_cells) < 14 or not str(h_cells[10]).strip():
                 try:
-                    ws.update(range_name="D2:M2", values=[["Date", "Person name", "Program", "Type", "No. of Devotees", "Menu Type", "Order Incentive", "Amount", "Payment through", "Paymt Rcvd"]], value_input_option="USER_ENTERED")
+                    ws.update(range_name=f"K{h_row}:N{h_row}", values=[["No. of Devotees", "Menu Type", "Order Incentive", "Notes"]], value_input_option="USER_ENTERED")
+                except Exception:
+                    pass
+        elif layout_type == "template_orders":
+            h_cells = all_rows[h_row - 1] if len(all_rows) >= h_row else []
+            if len(h_cells) < 14 or not str(h_cells[13]).strip():
+                try:
+                    ws.update(range_name=f"N{h_row}", values=[["Notes"]], value_input_option="USER_ENTERED")
                 except Exception:
                     pass
 
-        # Scan transaction rows strictly within rows 3 to 40
-        last_rec_row = 2
+        # Scan transaction rows
+        start_row = layout["data_start_row"]
+        last_rec_row = h_row
         total_row = 41
 
-        for idx in range(3, min(41, len(all_rows) + 1)):
+        for idx in range(start_row, min(41, len(all_rows) + 1)):
             r = all_rows[idx - 1] if idx - 1 < len(all_rows) else []
-            # Check if this row is the Total row
-            if any("total:" in str(cell).strip().lower() for cell in r[:14]):
+            if any("total:" in str(cell).strip().lower() for cell in r[:15]):
                 total_row = idx
                 break
 
-            p_name = r[4].strip() if len(r) > 4 else ""
-            d_val = r[3].strip() if len(r) > 3 else ""
-            amt_val = parse_num(r[10]) if len(r) > 10 else 0.0
+            p_name = r[cmap["person_name"]].strip() if len(r) > cmap["person_name"] else ""
+            d_val = r[cmap["date"]].strip() if len(r) > cmap["date"] else ""
+            amt_val = parse_num(r[cmap["amount"]]) if len(r) > cmap["amount"] else 0.0
             if p_name or d_val or amt_val > 0:
                 last_rec_row = idx
 
         target_row = last_rec_row + 1
 
-        # If transaction table is completely filled up to total_row, insert a new row before total_row
         if target_row >= total_row:
             ws.insert_rows([[""] * 15], row=total_row)
             target_row = total_row
 
-        rec_type = str(data.get("type") or "Order").strip()
-        is_order = (rec_type.lower() == "order")
-
-        amount_val = parse_num(data.get("amount", 0))
-        amt_clean = int(amount_val) if amount_val.is_integer() else round(amount_val, 2)
-        amt_cell = amt_clean if amount_val > 0 else ""
-
-        devotees_val = parse_int(data.get("number_of_devotees", 0)) if is_order else 0
-        devotees_cell = devotees_val if (is_order and devotees_val > 0) else ""
-
-        incentive_val = float(data.get("cook_incentive", 0.0)) if is_order else 0.0
-        incentive_clean = int(incentive_val) if incentive_val.is_integer() else round(incentive_val, 2)
-        incentive_cell = incentive_clean if (is_order and incentive_val > 0) else ""
-        menu_type_cell = str(data.get("menu_type") or "") if is_order else ""
-
-        row_vals = [
-            normalize_sheet_date(data.get("date")),
-            str(data.get("person_name") or ""),
-            str(data.get("program") or ""),
-            rec_type,
-            devotees_cell,
-            menu_type_cell,
-            incentive_cell,
-            amt_cell,
-            str(data.get("payment_through") or "Cash"),
-            str(data.get("payment_received") or "Yes")
-        ]
-
-        range_name = f"D{target_row}:M{target_row}"
+        row_vals = self._format_order_row_for_layout(layout, data)
+        range_name = f"{start_letter}{target_row}:{end_letter}{target_row}"
         ws.update(range_name=range_name, values=[row_vals], value_input_option="USER_ENTERED")
 
         tab_slug = re.sub(r"[^a-zA-Z0-9]", "_", target_tab)
         return {
             "id": f"{tab_slug}_R{target_row}",
             "row_number": target_row,
-            "date": row_vals[0],
-            "person_name": row_vals[1],
-            "program": row_vals[2],
-            "type": row_vals[3],
-            "number_of_devotees": devotees_val,
-            "menu_type": menu_type_cell,
-            "cook_incentive": incentive_val,
-            "amount": amount_val,
-            "payment_through": row_vals[8],
-            "payment_received": row_vals[9],
+            "date": normalize_sheet_date(data.get("date")),
+            "person_name": str(data.get("person_name") or ""),
+            "program": str(data.get("program") or ""),
+            "type": str(data.get("type") or "Order"),
+            "number_of_devotees": parse_int(data.get("number_of_devotees", 0)),
+            "menu_type": str(data.get("menu_type") or ""),
+            "cook_incentive": float(data.get("cook_incentive", 0.0)),
+            "amount": parse_num(data.get("amount", 0)),
+            "payment_through": str(data.get("payment_through") or "Cash"),
+            "payment_received": str(data.get("payment_received") or "Yes"),
             "notes": str(data.get("notes") or ""),
             "tab": target_tab
         }
@@ -1336,62 +1558,63 @@ class SheetService:
             return None
         row_idx = int(m.group(1))
 
-        current_vals = ws.get_values(f"D{row_idx}:M{row_idx}")
-        current_row = current_vals[0] if current_vals and current_vals[0] else [""] * 10
-        while len(current_row) < 10:
+        all_rows = ws.get_all_values()
+        layout = self._detect_order_layout(all_rows)
+        cmap = layout["col_map"]
+        start_letter = layout["start_col_letter"]
+        end_letter = layout["end_col_letter"]
+        start_idx = layout["start_col_idx"]
+
+        current_vals = ws.get_values(f"{start_letter}{row_idx}:{end_letter}{row_idx}")
+        current_row = current_vals[0] if current_vals and current_vals[0] else [""] * 11
+        while len(current_row) < 11:
             current_row.append("")
 
-        new_date = normalize_sheet_date(updates["date"]) if "date" in updates and updates["date"] is not None else current_row[0]
-        new_name = str(updates["person_name"]) if "person_name" in updates and updates["person_name"] is not None else current_row[1]
-        new_prog = str(updates["program"]) if "program" in updates and updates["program"] is not None else current_row[2]
-        new_type = str(updates["type"]) if "type" in updates and updates["type"] is not None else current_row[3]
+        def get_curr(col_key: str, default: str = "") -> str:
+            c = cmap[col_key] - start_idx
+            return current_row[c] if c < len(current_row) else default
 
-        is_order = (new_type.strip().lower() == "order")
+        merged_data = {
+            "date": updates["date"] if "date" in updates and updates["date"] is not None else get_curr("date"),
+            "person_name": updates["person_name"] if "person_name" in updates and updates["person_name"] is not None else get_curr("person_name"),
+            "program": updates["program"] if "program" in updates and updates["program"] is not None else get_curr("program"),
+            "type": updates["type"] if "type" in updates and updates["type"] is not None else get_curr("type", "Order"),
+            "payment_through": updates["payment_through"] if "payment_through" in updates and updates["payment_through"] is not None else get_curr("payment_through", "Cash"),
+            "payment_received": updates["payment_received"] if "payment_received" in updates and updates["payment_received"] is not None else get_curr("payment_received", "Yes"),
+            "notes": updates["notes"] if "notes" in updates and updates["notes"] is not None else get_curr("notes", ""),
+            "number_of_devotees": updates["number_of_devotees"] if "number_of_devotees" in updates and updates["number_of_devotees"] is not None else parse_int(get_curr("number_of_devotees")),
+            "menu_type": updates["menu_type"] if "menu_type" in updates and updates["menu_type"] is not None else get_curr("menu_type"),
+            "amount": updates["amount"] if "amount" in updates and updates["amount"] is not None else parse_num(get_curr("amount"))
+        }
 
-        if is_order:
-            new_dev = parse_int(updates["number_of_devotees"]) if "number_of_devotees" in updates and updates["number_of_devotees"] is not None else parse_int(current_row[4])
-            new_menu = str(updates["menu_type"]) if "menu_type" in updates and updates["menu_type"] is not None else current_row[5]
-            new_incentive = 0.0
-            if new_dev > 0 and new_menu:
-                new_incentive = calculate_cook_incentive(new_dev, new_menu)
-        else:
-            # Profit calculation is strictly applicable to type "Order" only
-            new_dev = 0
-            new_menu = ""
-            new_incentive = 0.0
+        rec_type = str(merged_data["type"]).strip()
+        is_order = (rec_type.lower() == "order")
+        devs = parse_int(merged_data["number_of_devotees"]) if is_order else 0
+        menu = str(merged_data["menu_type"]).strip() if is_order else ""
+        inc = 0.0
+        if is_order and devs > 0 and menu:
+            inc = calculate_cook_incentive(devs, menu)
+        merged_data["number_of_devotees"] = devs
+        merged_data["menu_type"] = menu
+        merged_data["cook_incentive"] = inc
 
-        new_dev_cell = new_dev if (is_order and new_dev > 0) else ""
-        new_inc_clean = int(new_incentive) if new_incentive.is_integer() else round(new_incentive, 2)
-        new_inc_cell = new_inc_clean if (is_order and new_incentive > 0) else ""
-        new_menu_cell = new_menu if is_order else ""
-
-        if "amount" in updates and updates["amount"] is not None:
-            amt = float(updates["amount"])
-            new_amt = int(amt) if amt.is_integer() else round(amt, 2)
-        else:
-            raw_curr_amt = parse_num(current_row[7])
-            new_amt = int(raw_curr_amt) if raw_curr_amt.is_integer() else raw_curr_amt if raw_curr_amt > 0 else ""
-
-        new_paym = str(updates["payment_through"]) if "payment_through" in updates and updates["payment_through"] is not None else current_row[8]
-        new_rcvd = str(updates["payment_received"]) if "payment_received" in updates and updates["payment_received"] is not None else current_row[9]
-
-        updated_row = [new_date, new_name, new_prog, new_type, new_dev_cell, new_menu_cell, new_inc_cell, new_amt, new_paym, new_rcvd]
-        ws.update(range_name=f"D{row_idx}:M{row_idx}", values=[updated_row], value_input_option="USER_ENTERED")
+        updated_row = self._format_order_row_for_layout(layout, merged_data)
+        ws.update(range_name=f"{start_letter}{row_idx}:{end_letter}{row_idx}", values=[updated_row], value_input_option="USER_ENTERED")
 
         return {
             "id": record_id,
             "row_number": row_idx,
-            "date": new_date,
-            "person_name": new_name,
-            "program": new_prog,
-            "type": new_type,
-            "number_of_devotees": new_dev,
-            "menu_type": new_menu,
-            "cook_incentive": new_incentive,
-            "amount": parse_num(new_amt),
-            "payment_through": new_paym,
-            "payment_received": new_rcvd,
-            "notes": str(updates.get("notes") or ""),
+            "date": merged_data["date"],
+            "person_name": merged_data["person_name"],
+            "program": merged_data["program"],
+            "type": merged_data["type"],
+            "number_of_devotees": devs,
+            "menu_type": menu,
+            "cook_incentive": inc,
+            "amount": parse_num(merged_data["amount"]),
+            "payment_through": merged_data["payment_through"],
+            "payment_received": merged_data["payment_received"],
+            "notes": merged_data["notes"],
             "tab": target_tab
         }
 
@@ -1414,40 +1637,46 @@ class SheetService:
         row_idx = int(m.group(1))
 
         all_rows = ws.get_all_values()
-        last_rec_row = row_idx
+        layout = self._detect_order_layout(all_rows)
+        start_letter = layout["start_col_letter"]
+        end_letter = layout["end_col_letter"]
+        start_idx = layout["start_col_idx"]
+        end_idx = layout["end_col_idx"]
+        cmap = layout["col_map"]
+        start_row = layout["data_start_row"]
 
-        # Strictly scan within transaction rows 3 to 40
-        for idx in range(3, min(41, len(all_rows) + 1)):
+        last_rec_row = row_idx
+        for idx in range(start_row, min(41, len(all_rows) + 1)):
             r = all_rows[idx - 1] if idx - 1 < len(all_rows) else []
-            if any("total:" in str(cell).strip().lower() for cell in r[:14]):
+            if any("total:" in str(cell).strip().lower() for cell in r[:15]):
                 break
-            p_name = r[4].strip() if len(r) > 4 else ""
-            d_val = r[3].strip() if len(r) > 3 else ""
-            amt_val = parse_num(r[10]) if len(r) > 10 else 0.0
+            p_name = r[cmap["person_name"]].strip() if len(r) > cmap["person_name"] else ""
+            d_val = r[cmap["date"]].strip() if len(r) > cmap["date"] else ""
+            amt_val = parse_num(r[cmap["amount"]]) if len(r) > cmap["amount"] else 0.0
             if p_name or d_val or amt_val > 0:
                 last_rec_row = idx
 
         if row_idx == last_rec_row:
-            ws.batch_clear([f"D{row_idx}:M{row_idx}"])
+            ws.batch_clear([f"{start_letter}{row_idx}:{end_letter}{row_idx}"])
             return True
 
         subsequent_rows = []
         for r in all_rows[row_idx:last_rec_row]:
-            sub_d_m = r[3:13] if len(r) > 3 else []
-            while len(sub_d_m) < 10:
-                sub_d_m.append("")
+            sub = r[start_idx:end_idx + 1] if len(r) > start_idx else []
+            while len(sub) < 11:
+                sub.append("")
             # Clean numeric columns to prevent string representation with apostrophe:
-            dev_v = parse_int(sub_d_m[4])
-            sub_d_m[4] = dev_v if dev_v > 0 else ""
-            inc_v = parse_num(sub_d_m[6])
-            sub_d_m[6] = int(inc_v) if inc_v.is_integer() else round(inc_v, 2) if inc_v > 0 else ""
-            amt_v = parse_num(sub_d_m[7])
-            sub_d_m[7] = int(amt_v) if amt_v.is_integer() else round(amt_v, 2) if amt_v > 0 else ""
-            subsequent_rows.append(sub_d_m)
+            dev_v = parse_int(sub[4])
+            sub[4] = dev_v if dev_v > 0 else ""
+            inc_v = parse_num(sub[6])
+            sub[6] = int(inc_v) if inc_v.is_integer() else round(inc_v, 2) if inc_v > 0 else ""
+            amt_v = parse_num(sub[7])
+            sub[7] = int(amt_v) if amt_v.is_integer() else round(amt_v, 2) if amt_v > 0 else ""
+            subsequent_rows.append(sub[:11])
 
         if subsequent_rows:
-            ws.update(range_name=f"D{row_idx}:M{last_rec_row - 1}", values=subsequent_rows, value_input_option="USER_ENTERED")
-        ws.batch_clear([f"D{last_rec_row}:M{last_rec_row}"])
+            ws.update(range_name=f"{start_letter}{row_idx}:{end_letter}{last_rec_row - 1}", values=subsequent_rows, value_input_option="USER_ENTERED")
+        ws.batch_clear([f"{start_letter}{last_rec_row}:{end_letter}{last_rec_row}"])
         return True
 
     # -------------------------------------------------------------------------
@@ -1580,32 +1809,56 @@ class SheetService:
 
             wb.save(EXCEL_FILE_PATH)
 
-    def _get_excel_records(self, target_tab: str) -> Dict[str, Any]:
+    def _get_excel_workbook_for_tab(self, target_tab: str, data_only: bool = False):
         self._ensure_excel_file()
-        if not OPENPYXL_AVAILABLE or not os.path.exists(EXCEL_FILE_PATH):
+        if not OPENPYXL_AVAILABLE:
+            return None, None, EXCEL_FILE_PATH
+
+        target_path = EXCEL_FILE_PATH
+        wb = openpyxl.load_workbook(target_path, data_only=data_only) if os.path.exists(target_path) else None
+
+        if wb and target_tab in wb.sheetnames:
+            return wb, wb[target_tab], target_path
+
+        # Check alternative workbook e.g. Kitchen_Accountability_Feb_27.xlsx
+        tab_slug = target_tab.replace(" ", "_")
+        alt_filename = f"Kitchen_Accountability_{tab_slug}.xlsx"
+        alt_path = os.path.join(os.path.dirname(__file__), alt_filename)
+        if os.path.exists(alt_path):
+            alt_wb = openpyxl.load_workbook(alt_path, data_only=data_only)
+            ws = alt_wb[target_tab] if target_tab in alt_wb.sheetnames else alt_wb.active
+            return alt_wb, ws, alt_path
+
+        ws = wb[target_tab] if (wb and target_tab in wb.sheetnames) else (wb.active if wb else None)
+        return wb, ws, target_path
+
+    def _get_excel_records(self, target_tab: str) -> Dict[str, Any]:
+        wb, ws, target_path = self._get_excel_workbook_for_tab(target_tab, data_only=True)
+        if not ws:
             return {"records": [], "metrics": self._empty_metrics(), "tab": target_tab}
 
-        wb = openpyxl.load_workbook(EXCEL_FILE_PATH, data_only=True)
-        ws = wb[target_tab] if target_tab in wb.sheetnames else wb.active
+        all_rows = [[cell.value for cell in row] for row in ws.iter_rows(max_row=45)]
+        layout = self._detect_order_layout(all_rows)
+        start_row = layout["data_start_row"]
+        cmap = layout["col_map"]
 
         records = []
-        for row_idx in range(3, ws.max_row + 1):
-            if row_idx > 40:
-                break
-            if any("total:" in str(ws.cell(row=row_idx, column=c).value or "").strip().lower() for c in range(1, 15)):
+        for row_idx in range(start_row, min(ws.max_row + 1, 41)):
+            if any("total:" in str(ws.cell(row=row_idx, column=c).value or "").strip().lower() for c in range(1, 16)):
                 break
 
-            d_val = str(ws.cell(row=row_idx, column=4).value or "").strip()
-            p_name = str(ws.cell(row=row_idx, column=5).value or "").strip()
-            prog = str(ws.cell(row=row_idx, column=6).value or "").strip()
-            t_val = str(ws.cell(row=row_idx, column=7).value or "Order").strip()
-            devs = parse_int(ws.cell(row=row_idx, column=8).value)
-            menu = str(ws.cell(row=row_idx, column=9).value or "").strip()
-            inc = parse_num(ws.cell(row=row_idx, column=10).value)
-            amt = parse_num(ws.cell(row=row_idx, column=11).value)
-            paym = str(ws.cell(row=row_idx, column=12).value or "Cash").strip()
-            rcvd = str(ws.cell(row=row_idx, column=13).value or "Yes").strip()
-            notes = str(ws.cell(row=row_idx, column=14).value or "").strip()
+            d_val_raw = ws.cell(row=row_idx, column=cmap["date"] + 1).value
+            d_val = normalize_sheet_date(d_val_raw) if d_val_raw else ""
+            p_name = str(ws.cell(row=row_idx, column=cmap["person_name"] + 1).value or "").strip()
+            prog = str(ws.cell(row=row_idx, column=cmap["program"] + 1).value or "").strip()
+            t_val = str(ws.cell(row=row_idx, column=cmap["type"] + 1).value or "Order").strip()
+            devs = parse_int(ws.cell(row=row_idx, column=cmap["number_of_devotees"] + 1).value)
+            menu = str(ws.cell(row=row_idx, column=cmap["menu_type"] + 1).value or "").strip()
+            inc = parse_num(ws.cell(row=row_idx, column=cmap["cook_incentive"] + 1).value)
+            amt = parse_num(ws.cell(row=row_idx, column=cmap["amount"] + 1).value)
+            paym = str(ws.cell(row=row_idx, column=cmap["payment_through"] + 1).value or "Cash").strip()
+            rcvd = str(ws.cell(row=row_idx, column=cmap["payment_received"] + 1).value or "Yes").strip()
+            notes = str(ws.cell(row=row_idx, column=cmap["notes"] + 1).value or "").strip()
 
             is_order = (t_val.strip().lower() == "order")
             if not is_order:
@@ -1638,126 +1891,147 @@ class SheetService:
         return {"records": records, "metrics": metrics, "tab": target_tab, "total_records": len(records)}
 
     def _add_excel_record(self, data: Dict[str, Any], target_tab: str) -> Dict[str, Any]:
-        self._ensure_excel_file()
-        wb = openpyxl.load_workbook(EXCEL_FILE_PATH)
-        ws = wb[target_tab] if target_tab in wb.sheetnames else wb.active
+        wb, ws, target_path = self._get_excel_workbook_for_tab(target_tab, data_only=False)
+        if not ws:
+            return {}
 
-        last_row = 2
-        for r in range(3, 41):
-            if ws.cell(row=r, column=5).value or ws.cell(row=r, column=4).value or parse_num(ws.cell(row=r, column=11).value) > 0:
+        all_rows = [[cell.value for cell in row] for row in ws.iter_rows(max_row=45)]
+        layout = self._detect_order_layout(all_rows)
+        start_row = layout["data_start_row"]
+        start_col = layout["start_col_idx"] + 1
+        cmap = layout["col_map"]
+        h_row = layout["header_row_idx"]
+        layout_type = layout["layout_type"]
+
+        # Ensure headers for new columns exist
+        if layout_type == "legacy_orders":
+            headers_to_add = ["No. of Devotees", "Menu Type", "Order Incentive", "Notes"]
+            for idx_h, h_name in enumerate(headers_to_add):
+                c_idx = start_col + 7 + idx_h
+                if not ws.cell(row=h_row, column=c_idx).value:
+                    ws.cell(row=h_row, column=c_idx, value=h_name)
+        elif layout_type == "template_orders":
+            notes_col = start_col + 10
+            if not ws.cell(row=h_row, column=notes_col).value:
+                ws.cell(row=h_row, column=notes_col, value="Notes")
+
+        last_row = h_row
+        for r in range(start_row, min(ws.max_row + 1, 41)):
+            if any("total:" in str(ws.cell(row=r, column=c).value or "").strip().lower() for c in range(1, 16)):
+                break
+            if (ws.cell(row=r, column=cmap["person_name"] + 1).value or
+                ws.cell(row=r, column=cmap["date"] + 1).value or
+                parse_num(ws.cell(row=r, column=cmap["amount"] + 1).value) > 0):
                 last_row = r
 
         target_row = last_row + 1
-        rec_type = str(data.get("type") or "Order").strip()
-        is_order = (rec_type.lower() == "order")
+        row_vals = self._format_order_row_for_layout(layout, data)
+        for offset, val in enumerate(row_vals):
+            ws.cell(row=target_row, column=start_col + offset, value=val)
 
-        devs_val = parse_int(data.get("number_of_devotees", 0)) if is_order else 0
-        menu_val = str(data.get("menu_type") or "").strip() if is_order else ""
-        inc_val = parse_num(data.get("cook_incentive", 0.0)) if is_order else 0.0
-
-        ws.cell(row=target_row, column=4, value=normalize_sheet_date(data.get("date")))
-        ws.cell(row=target_row, column=5, value=data.get("person_name") or "")
-        ws.cell(row=target_row, column=6, value=data.get("program") or "")
-        ws.cell(row=target_row, column=7, value=rec_type)
-        ws.cell(row=target_row, column=8, value=devs_val if devs_val > 0 else "")
-        ws.cell(row=target_row, column=9, value=menu_val)
-        ws.cell(row=target_row, column=10, value=inc_val if inc_val > 0 else "")
-        ws.cell(row=target_row, column=11, value=parse_num(data.get("amount", 0)))
-        ws.cell(row=target_row, column=12, value=data.get("payment_through") or "Cash")
-        ws.cell(row=target_row, column=13, value=data.get("payment_received") or "Yes")
-
-        wb.save(EXCEL_FILE_PATH)
+        wb.save(target_path)
         tab_slug = re.sub(r"[^a-zA-Z0-9]", "_", target_tab)
         return {
             "id": f"{tab_slug}_R{target_row}",
             "row_number": target_row,
-            "date": ws.cell(row=target_row, column=4).value,
-            "person_name": ws.cell(row=target_row, column=5).value,
-            "program": ws.cell(row=target_row, column=6).value,
-            "type": ws.cell(row=target_row, column=7).value,
-            "number_of_devotees": devs_val,
-            "menu_type": menu_val,
-            "cook_incentive": inc_val,
-            "amount": ws.cell(row=target_row, column=11).value,
-            "payment_through": ws.cell(row=target_row, column=12).value,
-            "payment_received": ws.cell(row=target_row, column=13).value,
+            "date": normalize_sheet_date(data.get("date")),
+            "person_name": str(data.get("person_name") or ""),
+            "program": str(data.get("program") or ""),
+            "type": str(data.get("type") or "Order"),
+            "number_of_devotees": parse_int(data.get("number_of_devotees", 0)),
+            "menu_type": str(data.get("menu_type") or ""),
+            "cook_incentive": float(data.get("cook_incentive", 0.0)),
+            "amount": parse_num(data.get("amount", 0)),
+            "payment_through": str(data.get("payment_through") or "Cash"),
+            "payment_received": str(data.get("payment_received") or "Yes"),
             "notes": str(data.get("notes") or ""),
             "tab": target_tab
         }
 
     def _update_excel_record(self, record_id: str, updates: Dict[str, Any], target_tab: str) -> Optional[Dict[str, Any]]:
-        self._ensure_excel_file()
-        wb = openpyxl.load_workbook(EXCEL_FILE_PATH)
-        ws = wb[target_tab] if target_tab in wb.sheetnames else wb.active
+        wb, ws, target_path = self._get_excel_workbook_for_tab(target_tab, data_only=False)
+        if not ws:
+            return None
 
         m = re.search(r"_R(\d+)$", record_id)
         if not m:
             return None
         row_idx = int(m.group(1))
 
-        if "date" in updates and updates["date"] is not None:
-            ws.cell(row=row_idx, column=4, value=normalize_sheet_date(updates["date"]))
-        if "person_name" in updates and updates["person_name"] is not None:
-            ws.cell(row=row_idx, column=5, value=str(updates["person_name"]))
-        if "program" in updates and updates["program"] is not None:
-            ws.cell(row=row_idx, column=6, value=str(updates["program"]))
-        if "type" in updates and updates["type"] is not None:
-            ws.cell(row=row_idx, column=7, value=str(updates["type"]))
-        if "number_of_devotees" in updates and updates["number_of_devotees"] is not None:
-            ws.cell(row=row_idx, column=8, value=parse_int(updates["number_of_devotees"]))
-        if "menu_type" in updates and updates["menu_type"] is not None:
-            ws.cell(row=row_idx, column=9, value=str(updates["menu_type"]))
-        if "amount" in updates and updates["amount"] is not None:
-            ws.cell(row=row_idx, column=11, value=parse_num(updates["amount"]))
-        if "payment_through" in updates and updates["payment_through"] is not None:
-            ws.cell(row=row_idx, column=12, value=str(updates["payment_through"]))
-        if "payment_received" in updates and updates["payment_received"] is not None:
-            ws.cell(row=row_idx, column=13, value=str(updates["payment_received"]))
+        all_rows = [[cell.value for cell in row] for row in ws.iter_rows(max_row=45)]
+        layout = self._detect_order_layout(all_rows)
+        cmap = layout["col_map"]
+        start_col = layout["start_col_idx"] + 1
 
-        t_val = str(ws.cell(row=row_idx, column=7).value or "Order").strip()
-        is_order = (t_val.lower() == "order")
-        devs = parse_int(ws.cell(row=row_idx, column=8).value) if is_order else 0
-        menu = str(ws.cell(row=row_idx, column=9).value or "").strip() if is_order else ""
+        def get_curr(col_key: str, default: str = "") -> str:
+            col_pos = cmap[col_key] + 1
+            v = ws.cell(row=row_idx, column=col_pos).value
+            return str(v).strip() if v is not None else default
+
+        merged_data = {
+            "date": updates["date"] if "date" in updates and updates["date"] is not None else get_curr("date"),
+            "person_name": updates["person_name"] if "person_name" in updates and updates["person_name"] is not None else get_curr("person_name"),
+            "program": updates["program"] if "program" in updates and updates["program"] is not None else get_curr("program"),
+            "type": updates["type"] if "type" in updates and updates["type"] is not None else get_curr("type", "Order"),
+            "payment_through": updates["payment_through"] if "payment_through" in updates and updates["payment_through"] is not None else get_curr("payment_through", "Cash"),
+            "payment_received": updates["payment_received"] if "payment_received" in updates and updates["payment_received"] is not None else get_curr("payment_received", "Yes"),
+            "notes": updates["notes"] if "notes" in updates and updates["notes"] is not None else get_curr("notes", ""),
+            "number_of_devotees": updates["number_of_devotees"] if "number_of_devotees" in updates and updates["number_of_devotees"] is not None else parse_int(get_curr("number_of_devotees")),
+            "menu_type": updates["menu_type"] if "menu_type" in updates and updates["menu_type"] is not None else get_curr("menu_type"),
+            "amount": updates["amount"] if "amount" in updates and updates["amount"] is not None else parse_num(get_curr("amount"))
+        }
+
+        rec_type = str(merged_data["type"]).strip()
+        is_order = (rec_type.lower() == "order")
+        devs = parse_int(merged_data["number_of_devotees"]) if is_order else 0
+        menu = str(merged_data["menu_type"]).strip() if is_order else ""
         inc = 0.0
         if is_order and devs > 0 and menu:
             inc = calculate_cook_incentive(devs, menu)
+        merged_data["number_of_devotees"] = devs
+        merged_data["menu_type"] = menu
+        merged_data["cook_incentive"] = inc
 
-        ws.cell(row=row_idx, column=8, value=devs if devs > 0 else "")
-        ws.cell(row=row_idx, column=9, value=menu)
-        ws.cell(row=row_idx, column=10, value=inc if inc > 0 else "")
+        row_vals = self._format_order_row_for_layout(layout, merged_data)
+        for offset, val in enumerate(row_vals):
+            ws.cell(row=row_idx, column=start_col + offset, value=val)
 
-        wb.save(EXCEL_FILE_PATH)
+        wb.save(target_path)
         return {
             "id": record_id,
             "row_number": row_idx,
-            "date": ws.cell(row=row_idx, column=4).value,
-            "person_name": ws.cell(row=row_idx, column=5).value,
-            "program": ws.cell(row=row_idx, column=6).value,
-            "type": ws.cell(row=row_idx, column=7).value,
+            "date": merged_data["date"],
+            "person_name": merged_data["person_name"],
+            "program": merged_data["program"],
+            "type": merged_data["type"],
             "number_of_devotees": devs,
             "menu_type": menu,
             "cook_incentive": inc,
-            "amount": ws.cell(row=row_idx, column=11).value,
-            "payment_through": ws.cell(row=row_idx, column=12).value,
-            "payment_received": ws.cell(row=row_idx, column=13).value,
-            "notes": str(updates.get("notes") or ""),
+            "amount": parse_num(merged_data["amount"]),
+            "payment_through": merged_data["payment_through"],
+            "payment_received": merged_data["payment_received"],
+            "notes": merged_data["notes"],
             "tab": target_tab
         }
 
     def _delete_excel_record(self, record_id: str, target_tab: str) -> bool:
-        self._ensure_excel_file()
-        wb = openpyxl.load_workbook(EXCEL_FILE_PATH)
-        ws = wb[target_tab] if target_tab in wb.sheetnames else wb.active
+        wb, ws, target_path = self._get_excel_workbook_for_tab(target_tab, data_only=False)
+        if not ws:
+            return False
 
         m = re.search(r"_R(\d+)$", record_id)
         if not m:
             return False
         row_idx = int(m.group(1))
 
-        for c in range(4, 15):
+        all_rows = [[cell.value for cell in row] for row in ws.iter_rows(max_row=45)]
+        layout = self._detect_order_layout(all_rows)
+        start_col = layout["start_col_idx"] + 1
+
+        for c in range(start_col, start_col + 11):
             ws.cell(row=row_idx, column=c, value="")
 
-        wb.save(EXCEL_FILE_PATH)
+        wb.save(target_path)
         return True
 
     def generate_excel_export(self, tab_name: Optional[str] = None) -> io.BytesIO:

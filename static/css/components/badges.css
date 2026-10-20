@@ -12,6 +12,7 @@
   font-weight: 600;
   border-radius: var(--radius-full);
   line-height: 1.3;
+  white-space: nowrap;
 }
 
 /* Status Badges in Topbar */
@@ -199,5 +200,7 @@
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 500;
+  white-space: nowrap;
+  display: inline-block;
 }
 

@@ -595,7 +595,7 @@ window.KitchenComponents.App = (() => {
                 </div>
 
                 {/* Desktop / Tablet Table */}
-                <div className={mobileRecordView === 'cards' ? 'hide-mobile' : ''}>
+                <div className={`orders-table-wrapper ${mobileRecordView === 'cards' ? 'hide-mobile' : ''}`}>
                   <OrdersTable
                     records={paginatedRecords}
                     isLoading={isRecordsLoading}

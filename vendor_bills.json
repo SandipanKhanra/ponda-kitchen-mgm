@@ -33,5 +33,15 @@
       "notes": "",
       "tab": "Jan 27"
     }
+  ],
+  "Nov 26": [
+    {
+      "id": "bill_eb1cb94b",
+      "vendor_name": "Matchless gift purchase",
+      "amount": 400.0,
+      "date": "20/10/2026",
+      "notes": "Sev",
+      "tab": "Nov 26"
+    }
   ]
 }
