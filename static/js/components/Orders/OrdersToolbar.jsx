@@ -26,9 +26,20 @@ window.KitchenComponents.Orders.OrdersToolbar = (() => {
     onExportExcel,
     onOpenAddModal
   }) {
+    const hasActiveFilters = typeFilter !== 'All' || paymentFilter !== 'All' || statusFilter !== 'All' || menuFilter !== 'All' || Boolean(searchQuery);
+
+    const handleClearAllFilters = () => {
+      onSearchChange('');
+      onTypeFilterChange('All');
+      onPaymentFilterChange('All');
+      onStatusFilterChange('All');
+      onMenuFilterChange('All');
+    };
+
     return (
-      <section className="controls-toolbar">
-        <div className="search-filter-group">
+      <section className="controls-toolbar" aria-label="Orders and sponsors toolbar">
+        {/* Tier 1: Search and Primary Actions Row */}
+        <div className="toolbar-primary-row">
           {/* Search Input */}
           <div className="search-box">
             <svg className="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -43,9 +54,91 @@ window.KitchenComponents.Orders.OrdersToolbar = (() => {
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
             />
+            {searchQuery && (
+              <button
+                type="button"
+                className="search-clear-btn"
+                onClick={() => onSearchChange('')}
+                aria-label="Clear search query"
+                title="Clear search"
+              >
+                &times;
+              </button>
+            )}
           </div>
 
-          {/* 4 Dropdown Filters (2x2 Grid on Mobile) */}
+          {/* Action Button Group */}
+          <div className="action-btn-group">
+            {/* Refresh Button with Spinner Animation */}
+            <button
+              id="refreshBtn"
+              type="button"
+              className={`btn btn-secondary ${isRefreshing ? 'spinning' : ''}`}
+              disabled={isRefreshing}
+              title="Force refresh from Google Sheet"
+              onClick={onRefresh}
+            >
+              {isRefreshing ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="spinning">
+                  <polyline points="23 4 23 10 17 10" />
+                  <polyline points="1 20 1 14 7 14" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="23 4 23 10 17 10" />
+                  <polyline points="1 20 1 14 7 14" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+              )}
+              <span>{isRefreshing ? 'Syncing...' : 'Refresh'}</span>
+            </button>
+
+            {/* Export to Excel Button with Feedback */}
+            <button
+              id="exportExcelBtn"
+              type="button"
+              className="btn btn-secondary"
+              disabled={isExporting}
+              title="Download month as Excel"
+              onClick={onExportExcel}
+            >
+              {isExporting ? <BtnSpinner /> : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              )}
+              <span>{isExporting ? 'Exporting...' : 'Export Excel'}</span>
+            </button>
+
+            {/* Add Entry Button */}
+            <button
+              id="openAddModalBtn"
+              type="button"
+              className="btn btn-primary"
+              onClick={onOpenAddModal}
+              title="Add New Order or Sponsor Entry"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              <span>Add Order Entry</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Tier 2: 4 Dropdown Filters Row */}
+        <div className="toolbar-filters-row">
+          <div className="filters-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
+            <span>Filters:</span>
+          </div>
+
           <div className="select-group">
             <select
               id="typeFilter"
@@ -94,66 +187,21 @@ window.KitchenComponents.Orders.OrdersToolbar = (() => {
               <option value="Very Heavy">Very Heavy (250)</option>
             </select>
           </div>
-        </div>
 
-        {/* Action Button Group */}
-        <div className="action-btn-group">
-          {/* Refresh Button with Spinner Animation */}
-          <button
-            id="refreshBtn"
-            className={`btn btn-secondary ${isRefreshing ? 'spinning' : ''}`}
-            disabled={isRefreshing}
-            title="Force refresh from Google Sheet"
-            onClick={onRefresh}
-          >
-            {isRefreshing ? (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="spinning">
-                <polyline points="23 4 23 10 17 10" />
-                <polyline points="1 20 1 14 7 14" />
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          {hasActiveFilters && (
+            <button
+              type="button"
+              className="btn-clear-filters"
+              onClick={handleClearAllFilters}
+              title="Reset all search queries and active filters"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="23 4 23 10 17 10" />
-                <polyline points="1 20 1 14 7 14" />
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-              </svg>
-            )}
-            <span>{isRefreshing ? 'Syncing...' : 'Refresh'}</span>
-          </button>
-
-          {/* Export to Excel Button with Feedback */}
-          <button
-            id="exportExcelBtn"
-            type="button"
-            className="btn btn-secondary"
-            disabled={isExporting}
-            title="Download month as Excel"
-            onClick={onExportExcel}
-          >
-            {isExporting ? <BtnSpinner /> : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-            )}
-            <span>{isExporting ? 'Exporting...' : 'Export Excel'}</span>
-          </button>
-
-          {/* Add Entry Button */}
-          <button
-            id="openAddModalBtn"
-            className="btn btn-primary"
-            onClick={onOpenAddModal}
-            title="Add New Order or Sponsor Entry"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            <span>+ Add Order Entry</span>
-          </button>
+              <span>Reset Filters</span>
+            </button>
+          )}
         </div>
       </section>
     );
@@ -163,4 +211,3 @@ window.KitchenComponents.Orders.OrdersToolbar = (() => {
 })();
 
 window.KitchenComponents.OrdersToolbar = window.KitchenComponents.Orders.OrdersToolbar;
-
