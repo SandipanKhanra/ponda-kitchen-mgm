@@ -57,7 +57,7 @@ window.KitchenComponents.Vendors.VendorSection = (() => {
               grocery bills
             </p>
           </div>
-          <div style={{ display: "flex", gap: "0.6rem" }}>
+          <div className="section-header-actions">
             <button
               type="button"
               className="btn btn-secondary"

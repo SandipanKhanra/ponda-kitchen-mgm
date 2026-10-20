@@ -38,7 +38,7 @@ window.KitchenComponents.Cooks.CookSection = (() => {
               Monthly compensation calculated dynamically using Policy Section 3 Matrix
             </p>
           </div>
-          <div>
+          <div className="section-header-actions">
             <button
               type="button"
               className="btn btn-primary"
