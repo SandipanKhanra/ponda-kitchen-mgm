@@ -1,0 +1,205 @@
+/* =============================================================================
+   Kitchen Accountability ERP - Button Components
+   Primary Gradient, Secondary Surface, Danger, Icons, Spinners
+   ============================================================================= */
+
+/* Modern High-Precision Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 38px;
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid transparent;
+  text-decoration: none;
+  white-space: nowrap;
+  box-sizing: border-box;
+  line-height: 1;
+  vertical-align: middle;
+  user-select: none;
+}
+
+.btn svg {
+  flex-shrink: 0;
+  display: block;
+}
+
+.btn span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+/* Primary Gradient Button */
+.btn-primary {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Secondary Surface Button */
+.btn-secondary {
+  background: var(--bg-surface);
+  border-color: var(--border-color);
+  color: var(--text-main);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover {
+  background: var(--border-subtle);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+  border-color: #2e416a;
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: #818cf8;
+  color: #ffffff;
+}
+
+/* Danger Button */
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Small Button Variant */
+.btn-sm {
+  height: 32px;
+  padding: 0 0.75rem;
+  font-size: 0.8rem;
+  gap: 0.35rem;
+  border-radius: var(--radius-sm);
+}
+
+/* Icon Buttons */
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-sm);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.btn-icon:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.15);
+}
+
+.btn-icon-danger {
+  color: var(--text-muted);
+}
+
+.btn-icon-danger:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-color: #fca5a5;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.15);
+}
+
+[data-theme="dark"] .btn-icon {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-color);
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .btn-icon:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+[data-theme="dark"] .btn-icon-danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Button Active & Disabled States */
+.btn:active:not(:disabled),
+.btn-icon:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn:disabled,
+.btn-icon:disabled {
+  opacity: 0.68;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Inline Button Spinner */
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.btn-secondary .btn-spinner {
+  border: 2px solid rgba(99, 102, 241, 0.25);
+  border-top-color: var(--primary);
+}
+
+/* Action Button Layout Helpers */
+.section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.action-buttons-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  width: 100%;
+}
+

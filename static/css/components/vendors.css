@@ -1,0 +1,23 @@
+/* =============================================================================
+   Kitchen Accountability ERP - Vendor Management Section
+   Vendor Directory, Itemized Expense Bills & Account Balance Overviews
+   ============================================================================= */
+
+.section-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.record-count-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--border-subtle);
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+}
+

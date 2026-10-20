@@ -1,0 +1,575 @@
+/* =============================================================================
+   Kitchen Accountability ERP - Responsive Breakpoints & Mobile Optimization
+   Desktop (>1024px), Tablet (769px-1024px), Mobile (<=768px), Compact (<=480px)
+   ============================================================================= */
+
+@media (min-width: 769px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+@media (max-width: 991px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+
+  .topbar {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .topbar-brand {
+    gap: 0.6rem;
+  }
+
+  .brand-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .brand-title {
+    font-size: 1.1rem;
+  }
+
+  .brand-subtitle {
+    font-size: 0.7rem;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .month-selector-wrapper {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .month-tab-select {
+    flex: 1;
+    min-width: 0;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  #openNewSheetBtn {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .status-badge {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .theme-toggle-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .main-nav-bar {
+    padding: 0 0.75rem;
+    gap: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 0.75rem 0.9rem;
+    font-size: 0.85rem;
+  }
+
+  .main-container {
+    padding: 0.85rem;
+    gap: 1rem;
+  }
+
+  .controls-toolbar {
+    padding: 0.85rem;
+    gap: 0.75rem;
+  }
+
+  .toolbar-primary-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+    width: 100%;
+  }
+
+  .search-filter-group {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 0.6rem;
+  }
+
+  .search-box {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .action-btn-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .action-btn-group #openAddModalBtn,
+  .action-btn-group .btn-primary {
+    grid-column: span 2;
+    order: -1;
+    height: 42px;
+    font-size: 0.875rem;
+    font-weight: 700;
+  }
+
+  .action-btn-group .btn {
+    width: 100%;
+    height: 40px;
+    min-width: 0;
+    justify-content: center;
+    font-size: 0.825rem;
+    padding: 0 0.65rem;
+  }
+
+  .toolbar-filters-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding-top: 0.4rem;
+  }
+
+  .filters-label {
+    display: none;
+  }
+
+  .select-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .select-group select {
+    width: 100%;
+    min-width: 0;
+    height: 38px;
+    font-size: 0.825rem;
+    padding: 0 0.55rem;
+  }
+
+  .btn-clear-filters {
+    width: 100%;
+    justify-content: center;
+    height: 34px;
+  }
+
+  /* Table Header */
+  .table-header-bar {
+    padding: 0.85rem 1rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .table-header-actions {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  /* Switch Table to Mobile Card View ONLY for Records Table */
+  .records-table-wrapper {
+    display: none;
+  }
+
+  .records-table-wrapper.force-show {
+    display: block !important;
+  }
+
+  .mobile-cards-list {
+    display: flex;
+  }
+
+  .mobile-cards-list.force-hide {
+    display: none !important;
+  }
+
+  /* All other table-scroll-wrappers remain visible and scrollable */
+  .table-scroll-wrapper {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-group.full-width {
+    grid-column: span 1;
+  }
+
+  .modal-backdrop {
+    padding: 0.75rem;
+    align-items: center;
+  }
+
+  .modal-card {
+    max-height: 94dvh;
+    border-radius: var(--radius-lg);
+    width: 100%;
+  }
+
+  .modal-card .dialog-header {
+    padding: 0.9rem 1.1rem;
+  }
+
+  .modal-card .dialog-body {
+    padding: 1rem 1.1rem;
+    gap: 0.85rem;
+  }
+
+  .modal-card .dialog-footer {
+    padding: 0.85rem 1.1rem;
+    gap: 0.6rem;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    font-size: 16px !important; /* Prevents iOS auto-zoom bug on focus */
+    min-height: 42px;
+  }
+
+  .incentive-preview-box {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .cook-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-section {
+    padding: 1rem;
+  }
+
+  .analytics-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .analytics-title-group h3 {
+    font-size: 1.05rem;
+  }
+
+  .bifurcation-tabs {
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bifurcation-tab-btn {
+    flex-shrink: 0;
+  }
+
+  .policy-hero-card {
+    padding: 1.25rem 1rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .policy-hero-title {
+    font-size: 1.2rem;
+  }
+
+  .policy-hero-actions,
+  .policy-hero-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .policy-card {
+    padding: 1.15rem 1rem;
+    gap: 0.85rem;
+  }
+
+  .policy-section-title {
+    font-size: 1rem;
+  }
+
+  .matrix-policy-table {
+    min-width: 750px;
+  }
+
+  .matrix-policy-table th,
+  .matrix-policy-table td {
+    padding: 0.5rem 0.55rem;
+    font-size: 0.825rem;
+  }
+
+  .table-scroll-hint {
+    display: inline-flex;
+  }
+
+  .pdf-embed-wrapper.hide-mobile {
+    display: none !important;
+  }
+
+  .pdf-doc-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.9rem 1rem;
+    gap: 0.85rem;
+  }
+
+  .pdf-open-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .committee-signatures-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .signature-chip {
+    padding: 0.55rem 0.65rem;
+  }
+
+  .section-header-actions {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .section-header-actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .stat-card {
+    padding: 0.85rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .stat-icon-wrapper {
+    width: 38px;
+    height: 38px;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+
+  .select-group {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+  }
+
+  .action-btn-group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+  }
+
+  .action-btn-group #openAddModalBtn,
+  .action-btn-group .btn-primary {
+    grid-column: span 2;
+    order: -1;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    height: 42px;
+  }
+
+  .action-btn-group .btn {
+    width: 100%;
+    height: 40px;
+    padding: 0 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #openNewSheetBtn span {
+    display: none;
+  }
+
+  .status-badge #statusText {
+    max-width: 95px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal-card {
+    max-height: 94dvh;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    border-bottom: none;
+    width: 100%;
+  }
+
+  .modal-card .dialog-header {
+    padding: 0.85rem 1rem;
+  }
+
+  .modal-card .dialog-body {
+    padding: 0.85rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .modal-card .dialog-footer {
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  .modal-card .dialog-footer .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.7rem 0.85rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .modal-title-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .dialog-title {
+    font-size: 1rem;
+  }
+
+  .order-details-box {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .app-dialog {
+    width: 95%;
+    max-height: 94dvh;
+    border-radius: var(--radius-md);
+  }
+
+  .dialog-content {
+    max-height: 94dvh;
+    border-radius: var(--radius-md);
+  }
+
+  .dialog-header {
+    padding: 0.9rem 1rem;
+  }
+
+  .dialog-form,
+  .dialog-body {
+    padding: 1rem;
+  }
+
+  .dialog-footer {
+    padding: 0.85rem 1rem;
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  .dialog-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pagination-wrapper {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 0.5rem;
+  }
+
+  .pagination-info {
+    font-size: 0.8rem;
+    text-align: center;
+  }
+
+  .pagination-controls {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .page-btn {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 0.4rem;
+    font-size: 0.8rem;
+  }
+
+  .info-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+  }
+
+  #bannerActionContainer,
+  #sheetLinkBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .toast-container {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+  }
+
+  .toast {
+    width: 100%;
+    font-size: 0.825rem;
+  }
+
+  .committee-signatures-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .policy-card {
+    padding: 1rem 0.75rem;
+  }
+}
+

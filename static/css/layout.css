@@ -1,0 +1,171 @@
+/* =============================================================================
+   Kitchen Accountability ERP - App Layout & Sticky Header
+   ============================================================================= */
+
+/* App Container */
+.app-layout {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  overflow-x: clip;
+  background: transparent;
+}
+
+/* Fixed / Sticky Top Section (Header + Navigation) */
+.app-top-section {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  background: var(--surface-header);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid var(--border-color);
+  width: 100%;
+}
+
+[data-theme="dark"] .app-top-section {
+  background: var(--surface-header);
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.45);
+}
+
+/* Header / Topbar */
+.topbar {
+  background: transparent;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.85rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-icon {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
+.brand-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.brand-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.theme-toggle-btn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  box-sizing: border-box;
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-toggle-btn:hover {
+  background-color: var(--border-subtle);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: rotate(15deg) scale(1.05);
+}
+
+.sun-icon {
+  display: none;
+}
+.moon-icon {
+  display: block;
+}
+
+[data-theme="dark"] .sun-icon {
+  display: block;
+  color: #f59e0b;
+}
+[data-theme="dark"] .moon-icon {
+  display: none;
+}
+
+/* Month Tab Dropdown in Header */
+.month-tab-select {
+  height: 38px;
+  padding: 0 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-main);
+  background-color: var(--bg-surface);
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.month-tab-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Main Container */
+.main-container {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+/* Page containers with smooth section transition */
+.app-page {
+  display: none;
+  flex-direction: column;
+  gap: 1.5rem;
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.app-page.active {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+  animation: pageFadeIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+

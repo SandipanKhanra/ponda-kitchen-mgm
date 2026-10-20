@@ -1,0 +1,168 @@
+/* =============================================================================
+   Kitchen Accountability ERP - Data Tables & Loading States
+   ============================================================================= */
+
+/* Table Container */
+.table-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.table-header-bar {
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.section-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.badge-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+}
+
+.table-scroll-wrapper {
+  overflow-x: auto;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Data Table */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+  min-width: 600px;
+}
+
+.data-table th {
+  background-color: var(--border-subtle);
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.data-table tbody tr:hover {
+  background-color: var(--border-subtle);
+}
+
+.text-right {
+  text-align: right;
+}
+
+.amount-display {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-main);
+}
+
+/* Dark Theme Table Overrides */
+[data-theme="dark"] .data-table th {
+  background-color: #0d1527;
+  color: #94a3b8;
+  border-bottom: 2px solid #233252;
+}
+
+[data-theme="dark"] .data-table td {
+  border-bottom: 1px solid #233252;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .data-table tr:hover {
+  background-color: rgba(99, 102, 241, 0.12);
+}
+
+/* Table Loading States */
+.table-loading-cell {
+  padding: 3.5rem 1.5rem !important;
+  text-align: center;
+}
+
+.loading-state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  padding: 2.5rem 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.loading-state-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Circular Spinner */
+.spinner-modern {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(99, 102, 241, 0.16);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.75s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+[data-theme="dark"] .spinner-modern {
+  border: 3px solid rgba(129, 140, 248, 0.2);
+  border-top-color: #818cf8;
+}
+
+/* Empty State */
+.empty-state {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.empty-icon {
+  color: var(--text-light);
+}
+
+.empty-state h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.empty-state p {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  max-width: 400px;
+}
+
