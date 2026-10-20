@@ -6,7 +6,14 @@ window.KitchenComponents = window.KitchenComponents || {};
 
 window.KitchenComponents.App = (() => {
   const { React } = window;
-  const { useState, useEffect, useMemo, useCallback } = React;
+  const {
+    useState,
+    useEffect,
+    useMemo,
+    useCallback,
+    useTransition,
+    useDeferredValue
+  } = React;
 
   const api = window.KitchenAPI;
   const KC = window.KitchenComponents || {};
@@ -60,13 +67,23 @@ window.KitchenComponents.App = (() => {
     const [availableTabs, setAvailableTabs] = useState(['April 26']);
     const [syncStatus, setSyncStatus] = useState({ mode: 'loading', spreadsheet_title: '', isSyncing: false });
 
+    // React 19 Concurrent Transitions
+    const [isNavPending, startNavTransition] = useTransition();
+    const [isTabPending, startTabTransition] = useTransition();
+    const [isRefreshing, startRefreshTransition] = useTransition();
+
+    const handleSelectPage = useCallback((newPage) => {
+      startNavTransition(() => {
+        setActivePage(newPage);
+      });
+    }, []);
+
     // -------------------------------------------------------------------------
     // Data States
     // -------------------------------------------------------------------------
     const [allRecords, setAllRecords] = useState([]);
     const [metrics, setMetrics] = useState({});
     const [isRecordsLoading, setIsRecordsLoading] = useState(true);
-    const [isRefreshing, setIsRefreshing] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
 
     const [vendorsData, setVendorsData] = useState({ vendors: [], available_vendors: [], all_entries: [], total_vendor_expenses: 0, net_difference: 0 });
@@ -187,37 +204,37 @@ window.KitchenComponents.App = (() => {
       }
     }, [currentTab, fetchRecords, fetchVendors, fetchCooks]);
 
-    // Month Selector Change
-    const handleTabChange = useCallback(async (newTab) => {
-      setCurrentTab(newTab);
-      localStorage.setItem('selectedTab', newTab);
-      setCurrentPage(1);
+    // Month Selector Change with React 19 Concurrent Transition
+    const handleTabChange = useCallback((newTab) => {
+      startTabTransition(() => {
+        setCurrentTab(newTab);
+        localStorage.setItem('selectedTab', newTab);
+        setCurrentPage(1);
+      });
       window.showToast(`Switched to month: ${newTab}`, 'info');
-      try {
-        await api.selectTab(newTab);
-      } catch (err) {
+      api.selectTab(newTab).catch((err) => {
         console.error('selectTab error:', err);
-      }
+      });
     }, []);
 
-    // Force Refresh Action
-    const handleRefresh = useCallback(async () => {
-      setIsRefreshing(true);
-      setSyncStatus((prev) => ({ ...prev, isSyncing: true }));
-      try {
-        await Promise.all([
-          fetchRecords(currentTab, true),
-          fetchVendors(currentTab),
-          fetchCooks(currentTab)
-        ]);
-        window.showToast('Kitchen records freshly synchronized with Google Sheet!', 'success');
-      } catch (err) {
-        window.showToast(`Sync error: ${err.message}`, 'error');
-      } finally {
-        setIsRefreshing(false);
-        setSyncStatus((prev) => ({ ...prev, isSyncing: false }));
-        fetchStatus();
-      }
+    // Force Refresh Action with React 19 Async Action Transition
+    const handleRefresh = useCallback(() => {
+      startRefreshTransition(async () => {
+        setSyncStatus((prev) => ({ ...prev, isSyncing: true }));
+        try {
+          await Promise.all([
+            fetchRecords(currentTab, true),
+            fetchVendors(currentTab),
+            fetchCooks(currentTab)
+          ]);
+          window.showToast('Kitchen records freshly synchronized with Google Sheet!', 'success');
+        } catch (err) {
+          window.showToast(`Sync error: ${err.message}`, 'error');
+        } finally {
+          setSyncStatus((prev) => ({ ...prev, isSyncing: false }));
+          fetchStatus();
+        }
+      });
     }, [currentTab, fetchRecords, fetchVendors, fetchCooks, fetchStatus]);
 
     // Export to Excel Action
@@ -231,10 +248,24 @@ window.KitchenComponents.App = (() => {
     }, [currentTab]);
 
     // -------------------------------------------------------------------------
-    // In-Memory Filtering & Pagination
+    // React 19 Deferred Values & In-Memory Filtering
     // -------------------------------------------------------------------------
+    const deferredSearchQuery = useDeferredValue(searchQuery);
+    const deferredTypeFilter = useDeferredValue(typeFilter);
+    const deferredPaymentFilter = useDeferredValue(paymentFilter);
+    const deferredStatusFilter = useDeferredValue(statusFilter);
+    const deferredMenuFilter = useDeferredValue(menuFilter);
+
+    // Indicator if deferred results are still reconciling
+    const isFilterDeferred =
+      searchQuery !== deferredSearchQuery ||
+      typeFilter !== deferredTypeFilter ||
+      paymentFilter !== deferredPaymentFilter ||
+      statusFilter !== deferredStatusFilter ||
+      menuFilter !== deferredMenuFilter;
+
     const filteredRecords = useMemo(() => {
-      const q = searchQuery.trim().toLowerCase();
+      const q = deferredSearchQuery.trim().toLowerCase();
       return allRecords.filter((r) => {
         if (q) {
           const matchText = (
@@ -248,28 +279,28 @@ window.KitchenComponents.App = (() => {
           if (!matchText.includes(q)) return false;
         }
 
-        if (typeFilter !== 'All') {
-          if ((r.type || '').toLowerCase() !== typeFilter.toLowerCase()) return false;
+        if (deferredTypeFilter !== 'All') {
+          if ((r.type || '').toLowerCase() !== deferredTypeFilter.toLowerCase()) return false;
         }
 
-        if (paymentFilter !== 'All') {
-          if (!(r.payment_through || '').toLowerCase().includes(paymentFilter.toLowerCase())) return false;
+        if (deferredPaymentFilter !== 'All') {
+          if (!(r.payment_through || '').toLowerCase().includes(deferredPaymentFilter.toLowerCase())) return false;
         }
 
-        if (statusFilter !== 'All') {
+        if (deferredStatusFilter !== 'All') {
           const rcvdRaw = (r.payment_received || '').trim().toLowerCase();
           const isPaid = rcvdRaw === 'yes' || rcvdRaw === 'paid' || rcvdRaw === 'done' || rcvdRaw === 'y';
-          if ((statusFilter === 'Paid' || statusFilter === 'Yes') && !isPaid) return false;
-          if ((statusFilter === 'Pending' || statusFilter === 'No') && isPaid) return false;
+          if ((deferredStatusFilter === 'Paid' || deferredStatusFilter === 'Yes') && !isPaid) return false;
+          if ((deferredStatusFilter === 'Pending' || deferredStatusFilter === 'No') && isPaid) return false;
         }
 
-        if (menuFilter !== 'All') {
-          if (!(r.menu_type || '').toLowerCase().includes(menuFilter.toLowerCase())) return false;
+        if (deferredMenuFilter !== 'All') {
+          if (!(r.menu_type || '').toLowerCase().includes(deferredMenuFilter.toLowerCase())) return false;
         }
 
         return true;
       });
-    }, [allRecords, searchQuery, typeFilter, paymentFilter, statusFilter, menuFilter]);
+    }, [allRecords, deferredSearchQuery, deferredTypeFilter, deferredPaymentFilter, deferredStatusFilter, deferredMenuFilter]);
 
     const paginatedRecords = useMemo(() => {
       const effectiveSize = pageSize === 'all' ? filteredRecords.length : parseInt(pageSize, 10);
@@ -482,7 +513,7 @@ window.KitchenComponents.App = (() => {
           />
 
           {/* 5-Tab Navigation Bar */}
-          <Navigation activePage={activePage} onSelectPage={setActivePage} />
+          <Navigation activePage={activePage} onSelectPage={handleSelectPage} isNavPending={isNavPending} />
         </div>
 
         {/* Main Content Area */}
@@ -516,7 +547,14 @@ window.KitchenComponents.App = (() => {
               />
 
               {/* Records Table & Cards Container */}
-              <section className="table-container" aria-label="Records Table">
+              <section
+                className="table-container"
+                aria-label="Records Table"
+                style={{
+                  opacity: isFilterDeferred ? 0.72 : 1,
+                  transition: 'opacity 0.15s ease'
+                }}
+              >
                 <div className="table-header-bar">
                   <h2 className="section-title">
                     <span id="currentMonthTitle">{currentTab}</span> Transactions
@@ -719,7 +757,7 @@ window.KitchenComponents.App = (() => {
     );
   }
 
-  return App;
+  return React.memo ? React.memo(App) : App;
 })();
 
 window.KitchenComponents.App.App = window.KitchenComponents.App;

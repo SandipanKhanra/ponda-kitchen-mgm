@@ -1,5 +1,5 @@
 ﻿// =============================================================================
-// Kitchen Accountability ERP - Consolidated App Bundle (React 18)
+// Kitchen Accountability ERP - Consolidated App Bundle (React 19)
 // =============================================================================
 
 // --- Component: static/js/components/Common.jsx ---
@@ -100,15 +100,17 @@ window.KitchenComponents.Common = (() => {
     );
   }
 
+  const memo = React.memo || ((c) => c);
+
   return {
-    SpinnerModern,
-    BtnSpinner,
-    TableLoadingCell,
-    MobileLoadingBox,
-    StatusBadge,
-    TypeBadge,
-    PaymentBadge,
-    PaymentStatusBadge
+    SpinnerModern: memo(SpinnerModern),
+    BtnSpinner: memo(BtnSpinner),
+    TableLoadingCell: memo(TableLoadingCell),
+    MobileLoadingBox: memo(MobileLoadingBox),
+    StatusBadge: memo(StatusBadge),
+    TypeBadge: memo(TypeBadge),
+    PaymentBadge: memo(PaymentBadge),
+    PaymentStatusBadge: memo(PaymentStatusBadge)
   };
 })();
 
@@ -294,7 +296,7 @@ window.KitchenComponents.Header = (() => {
     );
   }
 
-  return Header;
+  return React.memo ? React.memo(Header) : Header;
 })();
 
 window.KitchenComponents.Header.Header = window.KitchenComponents.Header;
@@ -369,9 +371,16 @@ window.KitchenComponents.Navigation = (() => {
     }
   ];
 
-  function Navigation({ activePage, onSelectPage }) {
+  function Navigation({ activePage, onSelectPage, isNavPending = false }) {
     return (
-      <nav className="main-nav-bar" aria-label="Main Navigation">
+      <nav
+        className="main-nav-bar"
+        aria-label="Main Navigation"
+        style={{
+          opacity: isNavPending ? 0.8 : 1,
+          transition: 'opacity 0.15s ease'
+        }}
+      >
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -388,7 +397,7 @@ window.KitchenComponents.Navigation = (() => {
     );
   }
 
-  return Navigation;
+  return React.memo ? React.memo(Navigation) : Navigation;
 })();
 
 window.KitchenComponents.Navigation.Navigation = window.KitchenComponents.Navigation;
@@ -461,7 +470,7 @@ window.KitchenComponents.SyncBanner = (() => {
     );
   }
 
-  return SyncBanner;
+  return React.memo ? React.memo(SyncBanner) : SyncBanner;
 })();
 
 window.KitchenComponents.SyncBanner.SyncBanner = window.KitchenComponents.SyncBanner;
@@ -544,7 +553,7 @@ window.KitchenComponents.Orders.StatsCards = (() => {
     );
   }
 
-  return StatsCards;
+  return React.memo ? React.memo(StatsCards) : StatsCards;
 })();
 
 window.KitchenComponents.StatsCards = window.KitchenComponents.Orders.StatsCards;
@@ -761,7 +770,7 @@ window.KitchenComponents.Orders.OrdersToolbar = (() => {
     );
   }
 
-  return OrdersToolbar;
+  return React.memo ? React.memo(OrdersToolbar) : OrdersToolbar;
 })();
 
 window.KitchenComponents.OrdersToolbar = window.KitchenComponents.Orders.OrdersToolbar;
@@ -894,7 +903,7 @@ window.KitchenComponents.Orders.OrdersTable = (() => {
     );
   }
 
-  return OrdersTable;
+  return React.memo ? React.memo(OrdersTable) : OrdersTable;
 })();
 
 window.KitchenComponents.OrdersTable = window.KitchenComponents.Orders.OrdersTable;
@@ -1023,7 +1032,7 @@ window.KitchenComponents.Orders.OrdersMobileCards = (() => {
     );
   }
 
-  return OrdersMobileCards;
+  return React.memo ? React.memo(OrdersMobileCards) : OrdersMobileCards;
 })();
 
 window.KitchenComponents.OrdersMobileCards = window.KitchenComponents.Orders.OrdersMobileCards;
@@ -1050,18 +1059,21 @@ window.KitchenComponents.Orders.Pagination = (() => {
   }) {
     if (total === 0) return null;
 
-    const effectivePageSize = pageSize === 'all' ? total : parseInt(pageSize, 10);
-    const maxPages = effectivePageSize > 0 ? Math.max(1, Math.ceil(total / effectivePageSize)) : 1;
-    const startIndex = (currentPage - 1) * effectivePageSize;
-    const countOnPage = pageSize === 'all' ? total : Math.min(effectivePageSize, total - startIndex);
-    const end = startIndex + countOnPage;
+    const { startIndex, end, maxPages, pageNumbers } = React.useMemo(() => {
+      const effectiveSize = pageSize === 'all' ? total : parseInt(pageSize, 10);
+      const maxP = effectiveSize > 0 ? Math.max(1, Math.ceil(total / effectiveSize)) : 1;
+      const startIdx = (currentPage - 1) * effectiveSize;
+      const count = pageSize === 'all' ? total : Math.min(effectiveSize, total - startIdx);
+      const endIdx = startIdx + count;
 
-    const startP = Math.max(1, currentPage - 2);
-    const endP = Math.min(maxPages, currentPage + 2);
-    const pageNumbers = [];
-    for (let p = startP; p <= endP; p++) {
-      pageNumbers.push(p);
-    }
+      const startP = Math.max(1, currentPage - 2);
+      const endP = Math.min(maxP, currentPage + 2);
+      const nums = [];
+      for (let p = startP; p <= endP; p++) {
+        nums.push(p);
+      }
+      return { startIndex: startIdx, end: endIdx, maxPages: maxP, pageNumbers: nums };
+    }, [total, currentPage, pageSize]);
 
     return (
       <div className="pagination-wrapper" id="paginationWrapper">
@@ -1145,7 +1157,7 @@ window.KitchenComponents.Orders.Pagination = (() => {
     );
   }
 
-  return Pagination;
+  return React.memo ? React.memo(Pagination) : Pagination;
 })();
 
 window.KitchenComponents.Pagination = window.KitchenComponents.Orders.Pagination;
@@ -1620,7 +1632,7 @@ window.KitchenComponents.Vendors.VendorSection = (() => {
     );
   }
 
-  return VendorSection;
+  return React.memo ? React.memo(VendorSection) : VendorSection;
 })();
 
 window.KitchenComponents.VendorSection =
@@ -1820,7 +1832,7 @@ window.KitchenComponents.Cooks.CookSection = (() => {
     );
   }
 
-  return CookSection;
+  return React.memo ? React.memo(CookSection) : CookSection;
 })();
 
 window.KitchenComponents.CookSection = window.KitchenComponents.Cooks.CookSection;
@@ -1838,10 +1850,29 @@ window.KitchenComponents.Analytics = window.KitchenComponents.Analytics || {};
 window.KitchenComponents.Analytics.AnalyticsSection = (() => {
   const { React } = window;
   const { useState, useMemo } = React;
-  const { CHART_COLORS, formatCurrency } = window.KitchenConstants;
+
+  const DEFAULT_COLORS = [
+    "#4f46e5", "#10b981", "#0284c7", "#f59e0b", "#ec4899",
+    "#8b5cf6", "#14b8a6", "#f97316", "#64748b", "#84cc16"
+  ];
+
+  const RADIUS = 38;
+  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+  const BIFURCATION_TABS = [
+    { id: 'type', label: 'By Type' },
+    { id: 'payment', label: 'Payment Mode' },
+    { id: 'program', label: 'Program' },
+    { id: 'status', label: 'Status' },
+    { id: 'menu', label: 'Menu' },
+  ];
 
   function AnalyticsSection({ metrics = {} }) {
-    const [activeBifurcation, setActiveBifurcation] = useState('type'); // 'type', 'payment', 'program', 'status', 'menu'
+    const [activeBifurcation, setActiveBifurcation] = useState('type');
+
+    const constants = window.KitchenConstants || {};
+    const chartColors = constants.CHART_COLORS || DEFAULT_COLORS;
+    const formatCurrency = constants.formatCurrency || ((v) => Number(v || 0).toLocaleString("en-IN"));
 
     const { dataset, title } = useMemo(() => {
       let data = {};
@@ -1877,35 +1908,36 @@ window.KitchenComponents.Analytics.AnalyticsSection = (() => {
       return items.reduce((acc, [_, val]) => acc + val, 0);
     }, [items]);
 
-    // Donut SVG Arc Math
-    const radius = 38;
-    const circumference = 2 * Math.PI * radius;
+    // Donut SVG Arc Math (Memoized for high performance)
+    const slices = useMemo(() => {
+      let accumulatedOffset = 0;
 
-    let accumulatedOffset = 0;
-    const slices = items.map(([label, value], i) => {
-      const percentage = total > 0 ? value / total : 0;
-      const strokeDasharray = `${percentage * circumference} ${circumference}`;
-      const strokeDashoffset = -accumulatedOffset;
-      accumulatedOffset += percentage * circumference;
+      return items.map(([label, value], i) => {
+        const percentage = total > 0 ? value / total : 0;
+        const strokeDasharray = `${percentage * CIRCUMFERENCE} ${CIRCUMFERENCE}`;
+        const strokeDashoffset = -accumulatedOffset;
+        accumulatedOffset += percentage * CIRCUMFERENCE;
 
-      let color = CHART_COLORS[i % CHART_COLORS.length];
-      if (activeBifurcation === 'status') {
-        const lbl = label.toLowerCase();
-        if (lbl === 'paid' || lbl === 'received') color = '#10b981';
-        else if (lbl === 'pending') color = '#f59e0b';
-      }
+        let color = chartColors[i % chartColors.length];
+        if (activeBifurcation === 'status') {
+          const lbl = label.toLowerCase();
+          if (lbl === 'paid' || lbl === 'received') color = '#10b981';
+          else if (lbl === 'pending') color = '#f59e0b';
+        }
 
-      return {
-        label,
-        value,
-        percentage: (percentage * 100).toFixed(1),
-        color,
-        strokeDasharray,
-        strokeDashoffset
-      };
-    });
+        return {
+          label,
+          value,
+          percentage: (percentage * 100).toFixed(1),
+          color,
+          strokeDasharray,
+          strokeDashoffset
+        };
+      });
+    }, [items, total, activeBifurcation, chartColors]);
 
-    const StatsCards = window.KitchenComponents?.StatsCards || (() => null);
+    const KC = window.KitchenComponents || {};
+    const StatsCards = KC.Orders?.StatsCards?.StatsCards || KC.Orders?.StatsCards || KC.StatsCards || (() => null);
 
     return (
       <div id="pageAnalytics" className="app-page active">
@@ -1937,13 +1969,7 @@ window.KitchenComponents.Analytics.AnalyticsSection = (() => {
             </div>
 
             <div className="bifurcation-tabs" role="tablist" aria-label="Bifurcation filters">
-              {[
-                { id: 'type', label: 'By Type' },
-                { id: 'payment', label: 'Payment Mode' },
-                { id: 'program', label: 'Program' },
-                { id: 'status', label: 'Status' },
-                { id: 'menu', label: 'Menu' },
-              ].map((tab) => (
+              {BIFURCATION_TABS.map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
@@ -1964,14 +1990,14 @@ window.KitchenComponents.Analytics.AnalyticsSection = (() => {
             <div className="chart-wrapper">
               <svg viewBox="0 0 100 100" id="donutSvg" className="donut-svg" aria-label="Donut Chart">
                 {total === 0 || slices.length === 0 ? (
-                  <circle cx="50" cy="50" r="38" fill="none" stroke="var(--border-color)" strokeWidth="14" />
+                  <circle cx="50" cy="50" r={RADIUS} fill="none" stroke="var(--border-color)" strokeWidth="14" />
                 ) : (
                   slices.map((slice) => (
                     <circle
                       key={slice.label}
                       cx="50"
                       cy="50"
-                      r={radius}
+                      r={RADIUS}
                       fill="none"
                       stroke={slice.color}
                       strokeWidth="14"
@@ -2018,11 +2044,10 @@ window.KitchenComponents.Analytics.AnalyticsSection = (() => {
     );
   }
 
-  return AnalyticsSection;
+  return React.memo ? React.memo(AnalyticsSection) : AnalyticsSection;
 })();
 
 window.KitchenComponents.AnalyticsSection = window.KitchenComponents.Analytics.AnalyticsSection;
-
 
 
 // --- Component: static/js/components/Policy/PolicySection.jsx ---
@@ -2035,31 +2060,45 @@ window.KitchenComponents.Policy = window.KitchenComponents.Policy || {};
 
 window.KitchenComponents.Policy.PolicySection = (() => {
   const { React } = window;
-  const { INCENTIVE_MATRIX, MENU_PRICES, formatCurrency } = window.KitchenConstants;
+  const { INCENTIVE_MATRIX, MENU_PRICES, formatCurrency } =
+    window.KitchenConstants;
+
+  // Hoisted static data references to prevent allocation on re-render
+  const DEVOTEE_TIERS = [
+    "Upto 25",
+    "From 26 to 50",
+    "From 51 to 75",
+    "From 76 to 100",
+    "From 101 to 125",
+    "From 126 to 150",
+    "From 151 to 175",
+    "From 176 to 200",
+    "From 201 to 225",
+    "From 226 to 250",
+  ];
+  const MENU_TYPES = ["Very Heavy", "Heavy", "Medium", "Light"];
 
   function PolicySection() {
-    const devoteeTiers = [
-      "Upto 25",
-      "From 26 to 50",
-      "From 51 to 75",
-      "From 76 to 100",
-      "From 101 to 125",
-      "From 126 to 150",
-      "From 151 to 175",
-      "From 176 to 200",
-      "From 201 to 225",
-      "From 226 to 250"
-    ];
-    const menuTypes = ["Very Heavy", "Heavy", "Medium", "Light"];
+    const devoteeTiers = DEVOTEE_TIERS;
+    const menuTypes = MENU_TYPES;
 
     return (
       <div id="pagePolicy" className="app-page active">
         {/* Header Toolbar */}
         <section className="section-toolbar">
           <div>
-            <h2 className="section-title" style={{ margin: 0 }}>ISKCON Ponda &bull; Kitchen Policy &amp; Accountability</h2>
-            <p style={{ margin: '0.25rem 0 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-              Official administrative guidelines, duty assignments, and profit incentive matrix (2025-26)
+            <h2 className="section-title" style={{ margin: 0 }}>
+              ISKCON Ponda &bull; Kitchen Policy &amp; Accountability
+            </h2>
+            <p
+              style={{
+                margin: "0.25rem 0 0",
+                color: "var(--text-muted)",
+                fontSize: "0.875rem",
+              }}
+            >
+              Official administrative guidelines, duty assignments, and profit
+              incentive matrix (2025-26)
             </p>
           </div>
         </section>
@@ -2071,15 +2110,35 @@ window.KitchenComponents.Policy.PolicySection = (() => {
               <span className="policy-num-badge">1</span>
               <div>
                 <h3 className="policy-section-title">Standard Kitchen Rules</h3>
-                <span className="policy-section-sub">Vaishnava kitchen hygiene, seva discipline and bhoga offering protocols</span>
+                <span className="policy-section-sub">
+                  Vaishnava kitchen hygiene, seva discipline and bhoga offering
+                  protocols
+                </span>
               </div>
             </div>
             <ul className="policy-list">
-              <li>Clean the kitchen before each new cooking begins; all cooking must be done after a proper bath and cleanliness.</li>
-              <li>Only pure, untasted vegetarian bhoga ingredients offered first to Sri Sri Radha Gopinath. No unoffered prasadam allowed.</li>
-              <li>Cooks should ensure bhoga is ready 15 mins prior to offering. Breakfast, lunch, and dinner prepared as per menu list and temple timing.</li>
-              <li>All orders, tiffins, and sponsors must be reported to the Kitchen In-charge. Cooks cannot take independent orders without informing the in-charge.</li>
-              <li>All grocery purchases, vegetable purchases, and vendor expenses must be recorded on the day of purchase.</li>
+              <li>
+                Clean the kitchen before each new cooking begins; all cooking
+                must be done after a proper bath and cleanliness.
+              </li>
+              <li>
+                Only pure, untasted vegetarian bhoga ingredients offered first
+                to Sri Sri Radha Gopinath. No unoffered prasadam allowed.
+              </li>
+              <li>
+                Cooks should ensure bhoga is ready 15 mins prior to offering.
+                Breakfast, lunch, and dinner prepared as per menu list and
+                temple timing.
+              </li>
+              <li>
+                All orders, tiffins, and sponsors must be reported to the
+                Kitchen In-charge. Cooks cannot take independent orders without
+                informing the in-charge.
+              </li>
+              <li>
+                All grocery purchases, vegetable purchases, and vendor expenses
+                must be recorded on the day of purchase.
+              </li>
             </ul>
           </div>
 
@@ -2088,25 +2147,45 @@ window.KitchenComponents.Policy.PolicySection = (() => {
             <div className="policy-card-header">
               <span className="policy-num-badge">2</span>
               <div>
-                <h3 className="policy-section-title">Cleaning &amp; Maintenance Responsibilities</h3>
-                <span className="policy-section-sub">Assigned areas and machines as per Section A.15 of Kitchen Policy</span>
+                <h3 className="policy-section-title">
+                  Cleaning &amp; Maintenance Responsibilities
+                </h3>
+                <span className="policy-section-sub">
+                  Assigned areas and machines as per Section A.15 of Kitchen
+                  Policy
+                </span>
               </div>
             </div>
             <div className="duty-block">
-              <div className="duty-name">Jitendra Prabhu (Kitchen In-charge)</div>
-              <div className="duty-desc">Area: Prasadam Hall (must always be neat and clean), Store Room &bull; Machines: Big Vegetable Cutting Machine, Big Grinder, Two Weighing Machines</div>
+              <div className="duty-name">
+                Jitendra Prabhu (Kitchen In-charge)
+              </div>
+              <div className="duty-desc">
+                Area: Prasadam Hall (must always be neat and clean), Store Room
+                &bull; Machines: Big Vegetable Cutting Machine, Big Grinder, Two
+                Weighing Machines
+              </div>
             </div>
             <div className="duty-block">
               <div className="duty-name">Chittaranjan Prabhu (Cook)</div>
-              <div className="duty-desc">Area: Main Kitchen, Wooden Chulha Area &bull; Machines: Fridge, Mixer</div>
+              <div className="duty-desc">
+                Area: Main Kitchen, Wooden Chulha Area &bull; Machines: Fridge,
+                Mixer
+              </div>
             </div>
             <div className="duty-block">
               <div className="duty-name">Manoranjan Prabhu (Cook)</div>
-              <div className="duty-desc">Area: Main Kitchen, Wooden Chulha Area &bull; Machines: Coconut Grater, Atta Making Machine</div>
+              <div className="duty-desc">
+                Area: Main Kitchen, Wooden Chulha Area &bull; Machines: Coconut
+                Grater, Atta Making Machine
+              </div>
             </div>
             <div className="duty-block">
               <div className="duty-name">Ranjan Prabhu (Cook)</div>
-              <div className="duty-desc">Area: Main Kitchen, Wooden Chulha Area &bull; Machines: Tomato Puree Machine, Potato Peeler</div>
+              <div className="duty-desc">
+                Area: Main Kitchen, Wooden Chulha Area &bull; Machines: Tomato
+                Puree Machine, Potato Peeler
+              </div>
             </div>
           </div>
 
@@ -2115,8 +2194,13 @@ window.KitchenComponents.Policy.PolicySection = (() => {
             <div className="policy-card-header">
               <span className="policy-num-badge">3</span>
               <div>
-                <h3 className="policy-section-title">Sub-Committee Confirmation &amp; Approval</h3>
-                <span className="policy-section-sub">Reviewed, confirmed, and approved by the Sub-Committee Members (Official Policy Document)</span>
+                <h3 className="policy-section-title">
+                  Sub-Committee Confirmation &amp; Approval
+                </h3>
+                <span className="policy-section-sub">
+                  Reviewed, confirmed, and approved by the Sub-Committee Members
+                  (Official Policy Document)
+                </span>
               </div>
             </div>
             <div className="committee-signatures-grid">
@@ -2152,17 +2236,35 @@ window.KitchenComponents.Policy.PolicySection = (() => {
             <div className="policy-card-header">
               <span className="policy-num-badge">4</span>
               <div>
-                <h3 className="policy-section-title">Scale of Incentive for Kitchen Employees Towards ISKCON Order Prasad</h3>
-                <span className="policy-section-sub">Section 3 Policy Matrix: Allowances &amp; Incentives as per attendee slabs (Upto 25, From 26 to 50, etc.)</span>
+                <h3 className="policy-section-title">
+                  Scale of Incentive for Kitchen Employees Towards ISKCON Order
+                  Prasad
+                </h3>
+                <span className="policy-section-sub">
+                  Section 3 Policy Matrix: Allowances &amp; Incentives as per
+                  attendee slabs (Upto 25, From 26 to 50, etc.)
+                </span>
               </div>
             </div>
 
             <div className="table-scroll-hint">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <polyline points="13 17 18 12 13 7"></polyline>
                 <polyline points="6 17 11 12 6 7"></polyline>
               </svg>
-              <span>Swipe table horizontally to view all attendee slabs (Upto 25, From 26 to 50... to 250)</span>
+              <span>
+                Swipe table horizontally to view all attendee slabs (Upto 25,
+                From 26 to 50... to 250)
+              </span>
             </div>
 
             <div className="table-scroll-wrapper">
@@ -2172,19 +2274,30 @@ window.KitchenComponents.Policy.PolicySection = (() => {
                     <th className="sticky-col">Menus</th>
                     <th>Rate / Plate</th>
                     {devoteeTiers.map((t) => (
-                      <th key={t} style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{t}</th>
+                      <th
+                        key={t}
+                        style={{ whiteSpace: "nowrap", textAlign: "center" }}
+                      >
+                        {t}
+                      </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {menuTypes.map((menu) => (
                     <tr key={menu}>
-                      <td className="sticky-col"><strong>{menu}</strong></td>
-                      <td><span className="badge badge-cash">₹{MENU_PRICES[menu]}/plate</span></td>
+                      <td className="sticky-col">
+                        <strong>{menu}</strong>
+                      </td>
+                      <td>
+                        <span className="badge badge-cash">
+                          ₹{MENU_PRICES[menu]}/plate
+                        </span>
+                      </td>
                       {devoteeTiers.map((tier, idx) => {
                         const amount = INCENTIVE_MATRIX[menu][idx];
                         return (
-                          <td key={tier} style={{ textAlign: 'center' }}>
+                          <td key={tier} style={{ textAlign: "center" }}>
                             <span className="matrix-amount">
                               ₹{formatCurrency(amount)}
                             </span>
@@ -2203,8 +2316,13 @@ window.KitchenComponents.Policy.PolicySection = (() => {
             <div className="policy-card-header">
               <span className="policy-num-badge">5</span>
               <div>
-                <h3 className="policy-section-title">Official Policy Document</h3>
-                <span className="policy-section-sub">Signed administrative policy resolution and bylaws (PDF format)</span>
+                <h3 className="policy-section-title">
+                  Official Policy Document
+                </h3>
+                <span className="policy-section-sub">
+                  Signed administrative policy resolution and bylaws (PDF
+                  format)
+                </span>
               </div>
             </div>
 
@@ -2212,7 +2330,16 @@ window.KitchenComponents.Policy.PolicySection = (() => {
             <div className="pdf-doc-card">
               <div className="pdf-doc-info">
                 <div className="pdf-doc-icon">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
                     <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -2221,9 +2348,13 @@ window.KitchenComponents.Policy.PolicySection = (() => {
                   </svg>
                 </div>
                 <div>
-                  <div className="pdf-doc-title">ISKCON_Ponda_Kitchen_Policy.pdf</div>
+                  <div className="pdf-doc-title">
+                    ISKCON_Ponda_Kitchen_Policy.pdf
+                  </div>
                   <div className="pdf-doc-meta">
-                    <span className="pdf-doc-badge">Official Signed Resolution</span>
+                    <span className="pdf-doc-badge">
+                      Official Signed Resolution
+                    </span>
                     <span>&bull;</span>
                     <span>Temple Administration 2025-26</span>
                   </div>
@@ -2235,7 +2366,16 @@ window.KitchenComponents.Policy.PolicySection = (() => {
                 rel="noreferrer"
                 className="btn btn-primary pdf-open-btn"
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                   <polyline points="15 3 21 3 21 9"></polyline>
                   <line x1="10" y1="14" x2="21" y2="3"></line>
@@ -2271,10 +2411,11 @@ window.KitchenComponents.Policy.PolicySection = (() => {
     );
   }
 
-  return PolicySection;
+  return React.memo ? React.memo(PolicySection) : PolicySection;
 })();
 
-window.KitchenComponents.PolicySection = window.KitchenComponents.Policy.PolicySection;
+window.KitchenComponents.PolicySection =
+  window.KitchenComponents.Policy.PolicySection;
 
 
 // --- Component: static/js/components/Common/CreateSheetModal.jsx ---
@@ -3460,7 +3601,14 @@ window.KitchenComponents = window.KitchenComponents || {};
 
 window.KitchenComponents.App = (() => {
   const { React } = window;
-  const { useState, useEffect, useMemo, useCallback } = React;
+  const {
+    useState,
+    useEffect,
+    useMemo,
+    useCallback,
+    useTransition,
+    useDeferredValue
+  } = React;
 
   const api = window.KitchenAPI;
   const KC = window.KitchenComponents || {};
@@ -3514,13 +3662,23 @@ window.KitchenComponents.App = (() => {
     const [availableTabs, setAvailableTabs] = useState(['April 26']);
     const [syncStatus, setSyncStatus] = useState({ mode: 'loading', spreadsheet_title: '', isSyncing: false });
 
+    // React 19 Concurrent Transitions
+    const [isNavPending, startNavTransition] = useTransition();
+    const [isTabPending, startTabTransition] = useTransition();
+    const [isRefreshing, startRefreshTransition] = useTransition();
+
+    const handleSelectPage = useCallback((newPage) => {
+      startNavTransition(() => {
+        setActivePage(newPage);
+      });
+    }, []);
+
     // -------------------------------------------------------------------------
     // Data States
     // -------------------------------------------------------------------------
     const [allRecords, setAllRecords] = useState([]);
     const [metrics, setMetrics] = useState({});
     const [isRecordsLoading, setIsRecordsLoading] = useState(true);
-    const [isRefreshing, setIsRefreshing] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
 
     const [vendorsData, setVendorsData] = useState({ vendors: [], available_vendors: [], all_entries: [], total_vendor_expenses: 0, net_difference: 0 });
@@ -3641,37 +3799,37 @@ window.KitchenComponents.App = (() => {
       }
     }, [currentTab, fetchRecords, fetchVendors, fetchCooks]);
 
-    // Month Selector Change
-    const handleTabChange = useCallback(async (newTab) => {
-      setCurrentTab(newTab);
-      localStorage.setItem('selectedTab', newTab);
-      setCurrentPage(1);
+    // Month Selector Change with React 19 Concurrent Transition
+    const handleTabChange = useCallback((newTab) => {
+      startTabTransition(() => {
+        setCurrentTab(newTab);
+        localStorage.setItem('selectedTab', newTab);
+        setCurrentPage(1);
+      });
       window.showToast(`Switched to month: ${newTab}`, 'info');
-      try {
-        await api.selectTab(newTab);
-      } catch (err) {
+      api.selectTab(newTab).catch((err) => {
         console.error('selectTab error:', err);
-      }
+      });
     }, []);
 
-    // Force Refresh Action
-    const handleRefresh = useCallback(async () => {
-      setIsRefreshing(true);
-      setSyncStatus((prev) => ({ ...prev, isSyncing: true }));
-      try {
-        await Promise.all([
-          fetchRecords(currentTab, true),
-          fetchVendors(currentTab),
-          fetchCooks(currentTab)
-        ]);
-        window.showToast('Kitchen records freshly synchronized with Google Sheet!', 'success');
-      } catch (err) {
-        window.showToast(`Sync error: ${err.message}`, 'error');
-      } finally {
-        setIsRefreshing(false);
-        setSyncStatus((prev) => ({ ...prev, isSyncing: false }));
-        fetchStatus();
-      }
+    // Force Refresh Action with React 19 Async Action Transition
+    const handleRefresh = useCallback(() => {
+      startRefreshTransition(async () => {
+        setSyncStatus((prev) => ({ ...prev, isSyncing: true }));
+        try {
+          await Promise.all([
+            fetchRecords(currentTab, true),
+            fetchVendors(currentTab),
+            fetchCooks(currentTab)
+          ]);
+          window.showToast('Kitchen records freshly synchronized with Google Sheet!', 'success');
+        } catch (err) {
+          window.showToast(`Sync error: ${err.message}`, 'error');
+        } finally {
+          setSyncStatus((prev) => ({ ...prev, isSyncing: false }));
+          fetchStatus();
+        }
+      });
     }, [currentTab, fetchRecords, fetchVendors, fetchCooks, fetchStatus]);
 
     // Export to Excel Action
@@ -3685,10 +3843,24 @@ window.KitchenComponents.App = (() => {
     }, [currentTab]);
 
     // -------------------------------------------------------------------------
-    // In-Memory Filtering & Pagination
+    // React 19 Deferred Values & In-Memory Filtering
     // -------------------------------------------------------------------------
+    const deferredSearchQuery = useDeferredValue(searchQuery);
+    const deferredTypeFilter = useDeferredValue(typeFilter);
+    const deferredPaymentFilter = useDeferredValue(paymentFilter);
+    const deferredStatusFilter = useDeferredValue(statusFilter);
+    const deferredMenuFilter = useDeferredValue(menuFilter);
+
+    // Indicator if deferred results are still reconciling
+    const isFilterDeferred =
+      searchQuery !== deferredSearchQuery ||
+      typeFilter !== deferredTypeFilter ||
+      paymentFilter !== deferredPaymentFilter ||
+      statusFilter !== deferredStatusFilter ||
+      menuFilter !== deferredMenuFilter;
+
     const filteredRecords = useMemo(() => {
-      const q = searchQuery.trim().toLowerCase();
+      const q = deferredSearchQuery.trim().toLowerCase();
       return allRecords.filter((r) => {
         if (q) {
           const matchText = (
@@ -3702,28 +3874,28 @@ window.KitchenComponents.App = (() => {
           if (!matchText.includes(q)) return false;
         }
 
-        if (typeFilter !== 'All') {
-          if ((r.type || '').toLowerCase() !== typeFilter.toLowerCase()) return false;
+        if (deferredTypeFilter !== 'All') {
+          if ((r.type || '').toLowerCase() !== deferredTypeFilter.toLowerCase()) return false;
         }
 
-        if (paymentFilter !== 'All') {
-          if (!(r.payment_through || '').toLowerCase().includes(paymentFilter.toLowerCase())) return false;
+        if (deferredPaymentFilter !== 'All') {
+          if (!(r.payment_through || '').toLowerCase().includes(deferredPaymentFilter.toLowerCase())) return false;
         }
 
-        if (statusFilter !== 'All') {
+        if (deferredStatusFilter !== 'All') {
           const rcvdRaw = (r.payment_received || '').trim().toLowerCase();
           const isPaid = rcvdRaw === 'yes' || rcvdRaw === 'paid' || rcvdRaw === 'done' || rcvdRaw === 'y';
-          if ((statusFilter === 'Paid' || statusFilter === 'Yes') && !isPaid) return false;
-          if ((statusFilter === 'Pending' || statusFilter === 'No') && isPaid) return false;
+          if ((deferredStatusFilter === 'Paid' || deferredStatusFilter === 'Yes') && !isPaid) return false;
+          if ((deferredStatusFilter === 'Pending' || deferredStatusFilter === 'No') && isPaid) return false;
         }
 
-        if (menuFilter !== 'All') {
-          if (!(r.menu_type || '').toLowerCase().includes(menuFilter.toLowerCase())) return false;
+        if (deferredMenuFilter !== 'All') {
+          if (!(r.menu_type || '').toLowerCase().includes(deferredMenuFilter.toLowerCase())) return false;
         }
 
         return true;
       });
-    }, [allRecords, searchQuery, typeFilter, paymentFilter, statusFilter, menuFilter]);
+    }, [allRecords, deferredSearchQuery, deferredTypeFilter, deferredPaymentFilter, deferredStatusFilter, deferredMenuFilter]);
 
     const paginatedRecords = useMemo(() => {
       const effectiveSize = pageSize === 'all' ? filteredRecords.length : parseInt(pageSize, 10);
@@ -3936,7 +4108,7 @@ window.KitchenComponents.App = (() => {
           />
 
           {/* 5-Tab Navigation Bar */}
-          <Navigation activePage={activePage} onSelectPage={setActivePage} />
+          <Navigation activePage={activePage} onSelectPage={handleSelectPage} isNavPending={isNavPending} />
         </div>
 
         {/* Main Content Area */}
@@ -3970,7 +4142,14 @@ window.KitchenComponents.App = (() => {
               />
 
               {/* Records Table & Cards Container */}
-              <section className="table-container" aria-label="Records Table">
+              <section
+                className="table-container"
+                aria-label="Records Table"
+                style={{
+                  opacity: isFilterDeferred ? 0.72 : 1,
+                  transition: 'opacity 0.15s ease'
+                }}
+              >
                 <div className="table-header-bar">
                   <h2 className="section-title">
                     <span id="currentMonthTitle">{currentTab}</span> Transactions
@@ -4173,7 +4352,7 @@ window.KitchenComponents.App = (() => {
     );
   }
 
-  return App;
+  return React.memo ? React.memo(App) : App;
 })();
 
 window.KitchenComponents.App.App = window.KitchenComponents.App;
@@ -4181,27 +4360,57 @@ window.KitchenComponents.App.App = window.KitchenComponents.App;
 
 // --- Component: static/js/index.jsx ---
 // =============================================================================
-// Kitchen Accountability ERP - Application Entry Point
+// Kitchen Accountability ERP - Application Entry Point (React 19)
 // =============================================================================
 
 (() => {
-  const { React, ReactDOM } = window;
-  const App = window.KitchenComponents?.App?.App || window.KitchenComponents?.App;
+  function mount() {
+    const React = window.React;
+    const ReactDOM = window.ReactDOM;
+    const App =
+      window.KitchenComponents?.App?.App || window.KitchenComponents?.App;
+    const rootElement = document.getElementById("root");
 
-  const rootElement = document.getElementById('root');
-  if (rootElement && App) {
-    if (ReactDOM.createRoot) {
-      const root = ReactDOM.createRoot(rootElement);
-      root.render(React.createElement(App));
+    if (!rootElement) {
+      console.error('[KitchenERP] Root element "#root" not found in DOM.');
+      return;
+    }
+    if (!App) {
+      console.error(
+        "[KitchenERP] App component not found on window.KitchenComponents.",
+      );
+      return;
+    }
+    if (!React || !ReactDOM) {
+      console.warn("[KitchenERP] Waiting for React runtime initialization...");
+      return;
+    }
+
+    if (!rootElement.__reactRoot && ReactDOM.createRoot) {
+      rootElement.__reactRoot = ReactDOM.createRoot(rootElement);
+      rootElement.__reactRoot.render(React.createElement(App));
+      console.info(
+        `[KitchenERP] Mounted successfully with React ${React.version || "19"}`,
+      );
+    } else if (rootElement.__reactRoot) {
+      rootElement.__reactRoot.render(React.createElement(App));
     } else {
       ReactDOM.render(React.createElement(App), rootElement);
     }
-  } else if (!rootElement) {
-    console.error('Root element "#root" not found in DOM.');
-  } else if (!App) {
-    console.error('App component not found on window.KitchenComponents.');
+  }
+
+  if (window.React && window.ReactDOM) {
+    mount();
+  } else {
+    window.addEventListener("react19-ready", mount, { once: true });
+    // Safe fallback timeout
+    setTimeout(() => {
+      const root = document.getElementById("root");
+      if (root && root.querySelector(".spinner-modern")) {
+        mount();
+      }
+    }, 200);
   }
 })();
-
 
 

@@ -8,10 +8,29 @@ window.KitchenComponents.Analytics = window.KitchenComponents.Analytics || {};
 window.KitchenComponents.Analytics.AnalyticsSection = (() => {
   const { React } = window;
   const { useState, useMemo } = React;
-  const { CHART_COLORS, formatCurrency } = window.KitchenConstants;
+
+  const DEFAULT_COLORS = [
+    "#4f46e5", "#10b981", "#0284c7", "#f59e0b", "#ec4899",
+    "#8b5cf6", "#14b8a6", "#f97316", "#64748b", "#84cc16"
+  ];
+
+  const RADIUS = 38;
+  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+  const BIFURCATION_TABS = [
+    { id: 'type', label: 'By Type' },
+    { id: 'payment', label: 'Payment Mode' },
+    { id: 'program', label: 'Program' },
+    { id: 'status', label: 'Status' },
+    { id: 'menu', label: 'Menu' },
+  ];
 
   function AnalyticsSection({ metrics = {} }) {
-    const [activeBifurcation, setActiveBifurcation] = useState('type'); // 'type', 'payment', 'program', 'status', 'menu'
+    const [activeBifurcation, setActiveBifurcation] = useState('type');
+
+    const constants = window.KitchenConstants || {};
+    const chartColors = constants.CHART_COLORS || DEFAULT_COLORS;
+    const formatCurrency = constants.formatCurrency || ((v) => Number(v || 0).toLocaleString("en-IN"));
 
     const { dataset, title } = useMemo(() => {
       let data = {};
@@ -47,35 +66,36 @@ window.KitchenComponents.Analytics.AnalyticsSection = (() => {
       return items.reduce((acc, [_, val]) => acc + val, 0);
     }, [items]);
 
-    // Donut SVG Arc Math
-    const radius = 38;
-    const circumference = 2 * Math.PI * radius;
+    // Donut SVG Arc Math (Memoized for high performance)
+    const slices = useMemo(() => {
+      let accumulatedOffset = 0;
 
-    let accumulatedOffset = 0;
-    const slices = items.map(([label, value], i) => {
-      const percentage = total > 0 ? value / total : 0;
-      const strokeDasharray = `${percentage * circumference} ${circumference}`;
-      const strokeDashoffset = -accumulatedOffset;
-      accumulatedOffset += percentage * circumference;
+      return items.map(([label, value], i) => {
+        const percentage = total > 0 ? value / total : 0;
+        const strokeDasharray = `${percentage * CIRCUMFERENCE} ${CIRCUMFERENCE}`;
+        const strokeDashoffset = -accumulatedOffset;
+        accumulatedOffset += percentage * CIRCUMFERENCE;
 
-      let color = CHART_COLORS[i % CHART_COLORS.length];
-      if (activeBifurcation === 'status') {
-        const lbl = label.toLowerCase();
-        if (lbl === 'paid' || lbl === 'received') color = '#10b981';
-        else if (lbl === 'pending') color = '#f59e0b';
-      }
+        let color = chartColors[i % chartColors.length];
+        if (activeBifurcation === 'status') {
+          const lbl = label.toLowerCase();
+          if (lbl === 'paid' || lbl === 'received') color = '#10b981';
+          else if (lbl === 'pending') color = '#f59e0b';
+        }
 
-      return {
-        label,
-        value,
-        percentage: (percentage * 100).toFixed(1),
-        color,
-        strokeDasharray,
-        strokeDashoffset
-      };
-    });
+        return {
+          label,
+          value,
+          percentage: (percentage * 100).toFixed(1),
+          color,
+          strokeDasharray,
+          strokeDashoffset
+        };
+      });
+    }, [items, total, activeBifurcation, chartColors]);
 
-    const StatsCards = window.KitchenComponents?.StatsCards || (() => null);
+    const KC = window.KitchenComponents || {};
+    const StatsCards = KC.Orders?.StatsCards?.StatsCards || KC.Orders?.StatsCards || KC.StatsCards || (() => null);
 
     return (
       <div id="pageAnalytics" className="app-page active">
@@ -107,13 +127,7 @@ window.KitchenComponents.Analytics.AnalyticsSection = (() => {
             </div>
 
             <div className="bifurcation-tabs" role="tablist" aria-label="Bifurcation filters">
-              {[
-                { id: 'type', label: 'By Type' },
-                { id: 'payment', label: 'Payment Mode' },
-                { id: 'program', label: 'Program' },
-                { id: 'status', label: 'Status' },
-                { id: 'menu', label: 'Menu' },
-              ].map((tab) => (
+              {BIFURCATION_TABS.map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
@@ -134,14 +148,14 @@ window.KitchenComponents.Analytics.AnalyticsSection = (() => {
             <div className="chart-wrapper">
               <svg viewBox="0 0 100 100" id="donutSvg" className="donut-svg" aria-label="Donut Chart">
                 {total === 0 || slices.length === 0 ? (
-                  <circle cx="50" cy="50" r="38" fill="none" stroke="var(--border-color)" strokeWidth="14" />
+                  <circle cx="50" cy="50" r={RADIUS} fill="none" stroke="var(--border-color)" strokeWidth="14" />
                 ) : (
                   slices.map((slice) => (
                     <circle
                       key={slice.label}
                       cx="50"
                       cy="50"
-                      r={radius}
+                      r={RADIUS}
                       fill="none"
                       stroke={slice.color}
                       strokeWidth="14"
@@ -188,8 +202,7 @@ window.KitchenComponents.Analytics.AnalyticsSection = (() => {
     );
   }
 
-  return AnalyticsSection;
+  return React.memo ? React.memo(AnalyticsSection) : AnalyticsSection;
 })();
 
 window.KitchenComponents.AnalyticsSection = window.KitchenComponents.Analytics.AnalyticsSection;
-

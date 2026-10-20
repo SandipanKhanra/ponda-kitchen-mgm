@@ -190,7 +190,7 @@ window.KitchenComponents.Cooks.CookSection = (() => {
     );
   }
 
-  return CookSection;
+  return React.memo ? React.memo(CookSection) : CookSection;
 })();
 
 window.KitchenComponents.CookSection = window.KitchenComponents.Cooks.CookSection;

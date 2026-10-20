@@ -124,7 +124,7 @@ window.KitchenComponents.Orders.OrdersTable = (() => {
     );
   }
 
-  return OrdersTable;
+  return React.memo ? React.memo(OrdersTable) : OrdersTable;
 })();
 
 window.KitchenComponents.OrdersTable = window.KitchenComponents.Orders.OrdersTable;

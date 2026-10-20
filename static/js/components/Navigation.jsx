@@ -66,9 +66,16 @@ window.KitchenComponents.Navigation = (() => {
     }
   ];
 
-  function Navigation({ activePage, onSelectPage }) {
+  function Navigation({ activePage, onSelectPage, isNavPending = false }) {
     return (
-      <nav className="main-nav-bar" aria-label="Main Navigation">
+      <nav
+        className="main-nav-bar"
+        aria-label="Main Navigation"
+        style={{
+          opacity: isNavPending ? 0.8 : 1,
+          transition: 'opacity 0.15s ease'
+        }}
+      >
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -85,7 +92,7 @@ window.KitchenComponents.Navigation = (() => {
     );
   }
 
-  return Navigation;
+  return React.memo ? React.memo(Navigation) : Navigation;
 })();
 
 window.KitchenComponents.Navigation.Navigation = window.KitchenComponents.Navigation;

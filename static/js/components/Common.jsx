@@ -95,15 +95,17 @@ window.KitchenComponents.Common = (() => {
     );
   }
 
+  const memo = React.memo || ((c) => c);
+
   return {
-    SpinnerModern,
-    BtnSpinner,
-    TableLoadingCell,
-    MobileLoadingBox,
-    StatusBadge,
-    TypeBadge,
-    PaymentBadge,
-    PaymentStatusBadge
+    SpinnerModern: memo(SpinnerModern),
+    BtnSpinner: memo(BtnSpinner),
+    TableLoadingCell: memo(TableLoadingCell),
+    MobileLoadingBox: memo(MobileLoadingBox),
+    StatusBadge: memo(StatusBadge),
+    TypeBadge: memo(TypeBadge),
+    PaymentBadge: memo(PaymentBadge),
+    PaymentStatusBadge: memo(PaymentStatusBadge)
   };
 })();
 

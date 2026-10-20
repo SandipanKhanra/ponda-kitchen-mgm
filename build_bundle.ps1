@@ -27,7 +27,7 @@ $files = @(
   "static/js/index.jsx"
 )
 
-$bundleContent = "// =============================================================================`n// Kitchen Accountability ERP - Consolidated App Bundle (React 18)`n// =============================================================================`n`n"
+$bundleContent = "// =============================================================================`n// Kitchen Accountability ERP - Consolidated App Bundle (React 19)`n// =============================================================================`n`n"
 
 foreach ($f in $files) {
   $filePath = Join-Path $PSScriptRoot $f

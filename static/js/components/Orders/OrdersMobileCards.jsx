@@ -119,7 +119,7 @@ window.KitchenComponents.Orders.OrdersMobileCards = (() => {
     );
   }
 
-  return OrdersMobileCards;
+  return React.memo ? React.memo(OrdersMobileCards) : OrdersMobileCards;
 })();
 
 window.KitchenComponents.OrdersMobileCards = window.KitchenComponents.Orders.OrdersMobileCards;

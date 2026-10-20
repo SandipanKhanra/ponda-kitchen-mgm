@@ -207,7 +207,7 @@ window.KitchenComponents.Orders.OrdersToolbar = (() => {
     );
   }
 
-  return OrdersToolbar;
+  return React.memo ? React.memo(OrdersToolbar) : OrdersToolbar;
 })();
 
 window.KitchenComponents.OrdersToolbar = window.KitchenComponents.Orders.OrdersToolbar;

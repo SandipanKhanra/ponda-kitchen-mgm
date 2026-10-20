@@ -102,7 +102,7 @@ window.KitchenComponents.Header = (() => {
     );
   }
 
-  return Header;
+  return React.memo ? React.memo(Header) : Header;
 })();
 
 window.KitchenComponents.Header.Header = window.KitchenComponents.Header;

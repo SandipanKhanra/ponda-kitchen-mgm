@@ -40,9 +40,51 @@
       });
     </script>
 
-    <!-- React 18 & Babel Standalone for Native In-Browser Execution on Render -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <!-- React 19 Modern Architecture with Native Import Maps & ESM CDN -->
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@19",
+          "react/": "https://esm.sh/react@19/",
+          "react-dom": "https://esm.sh/react-dom@19",
+          "react-dom/": "https://esm.sh/react-dom@19/",
+          "react-dom/client": "https://esm.sh/react-dom@19/client"
+        }
+      }
+    </script>
+    <script type="module">
+      import * as React from 'react';
+      import * as ReactDOM from 'react-dom';
+      import * as ReactDOMClient from 'react-dom/client';
+
+      window.React = React;
+      window.ReactDOM = {
+        ...ReactDOM,
+        ...ReactDOMClient,
+        createRoot: ReactDOMClient.createRoot
+      };
+      window.__REACT_VERSION__ = React.version || '19.0.0';
+      console.info(`[KitchenERP] React 19 initialized: v${window.__REACT_VERSION__}`);
+      window.dispatchEvent(new CustomEvent('react19-ready'));
+    </script>
+    <script>
+      // Fallback bridge: if ESM takes longer than expected, load secondary ESM mirror
+      setTimeout(function() {
+        if (!window.React) {
+          console.warn('[KitchenERP] Primary CDN delayed, attempting fallback ESM load...');
+          import('https://cdn.jsdelivr.net/npm/react@19/+esm').then(function(r) {
+            import('https://cdn.jsdelivr.net/npm/react-dom@19/+esm').then(function(rd) {
+              window.React = r.default || r;
+              window.ReactDOM = rd.default || rd;
+              window.__REACT_VERSION__ = window.React.version || '19.0.0';
+              window.dispatchEvent(new CustomEvent('react19-ready'));
+            });
+          }).catch(function(err) {
+            console.error('[KitchenERP] Fallback failed:', err);
+          });
+        }
+      }, 3000);
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.4/babel.min.js"></script>
   </head>
   <body>

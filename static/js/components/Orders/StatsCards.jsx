@@ -73,7 +73,7 @@ window.KitchenComponents.Orders.StatsCards = (() => {
     );
   }
 
-  return StatsCards;
+  return React.memo ? React.memo(StatsCards) : StatsCards;
 })();
 
 window.KitchenComponents.StatsCards = window.KitchenComponents.Orders.StatsCards;

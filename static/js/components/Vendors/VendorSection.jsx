@@ -465,7 +465,7 @@ window.KitchenComponents.Vendors.VendorSection = (() => {
     );
   }
 
-  return VendorSection;
+  return React.memo ? React.memo(VendorSection) : VendorSection;
 })();
 
 window.KitchenComponents.VendorSection =

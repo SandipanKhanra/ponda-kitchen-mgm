@@ -63,7 +63,7 @@ window.KitchenComponents.SyncBanner = (() => {
     );
   }
 
-  return SyncBanner;
+  return React.memo ? React.memo(SyncBanner) : SyncBanner;
 })();
 
 window.KitchenComponents.SyncBanner.SyncBanner = window.KitchenComponents.SyncBanner;

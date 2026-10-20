@@ -17,18 +17,21 @@ window.KitchenComponents.Orders.Pagination = (() => {
   }) {
     if (total === 0) return null;
 
-    const effectivePageSize = pageSize === 'all' ? total : parseInt(pageSize, 10);
-    const maxPages = effectivePageSize > 0 ? Math.max(1, Math.ceil(total / effectivePageSize)) : 1;
-    const startIndex = (currentPage - 1) * effectivePageSize;
-    const countOnPage = pageSize === 'all' ? total : Math.min(effectivePageSize, total - startIndex);
-    const end = startIndex + countOnPage;
+    const { startIndex, end, maxPages, pageNumbers } = React.useMemo(() => {
+      const effectiveSize = pageSize === 'all' ? total : parseInt(pageSize, 10);
+      const maxP = effectiveSize > 0 ? Math.max(1, Math.ceil(total / effectiveSize)) : 1;
+      const startIdx = (currentPage - 1) * effectiveSize;
+      const count = pageSize === 'all' ? total : Math.min(effectiveSize, total - startIdx);
+      const endIdx = startIdx + count;
 
-    const startP = Math.max(1, currentPage - 2);
-    const endP = Math.min(maxPages, currentPage + 2);
-    const pageNumbers = [];
-    for (let p = startP; p <= endP; p++) {
-      pageNumbers.push(p);
-    }
+      const startP = Math.max(1, currentPage - 2);
+      const endP = Math.min(maxP, currentPage + 2);
+      const nums = [];
+      for (let p = startP; p <= endP; p++) {
+        nums.push(p);
+      }
+      return { startIndex: startIdx, end: endIdx, maxPages: maxP, pageNumbers: nums };
+    }, [total, currentPage, pageSize]);
 
     return (
       <div className="pagination-wrapper" id="paginationWrapper">
@@ -112,7 +115,7 @@ window.KitchenComponents.Orders.Pagination = (() => {
     );
   }
 
-  return Pagination;
+  return React.memo ? React.memo(Pagination) : Pagination;
 })();
 
 window.KitchenComponents.Pagination = window.KitchenComponents.Orders.Pagination;
