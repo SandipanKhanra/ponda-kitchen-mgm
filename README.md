@@ -4,14 +4,49 @@ A complete Kitchen Management and ERP system built with **FastAPI** and **React 
 
 ---
 
-## ⚛️ React 18 Architecture & Modular Components
+## 🌟 Key Application Modules
 
-The frontend has been migrated to **React 18** with a clean, modular component hierarchy:
+1. **Orders & Devotee Booking**:
+   - Devotee plate tracking, Cash / GPay / Bank bifurcations, and paid/pending payment reconciliation.
+   - Policy Section 3 matrix incentive auto-calculator based on plate counts.
+   - Search, multi-column filters (Status, Cook, Mode, Category), sorting, pagination, and data export.
+   - Dual-view interface: responsive table on desktop and swipeable card view on mobile.
+
+2. **Vendor Accounts & Multi-Bill Logging**:
+   - Vendor directory management and itemized grocery/supply bills.
+   - Auto-calculated expenditures, total payments, and debit/credit balance reconciliation.
+
+3. **Cook Management & Payroll**:
+   - Cook staff roster with monthly salary tracking and festival allowances.
+   - Automated Policy Section 3 matrix incentive calculation per cook based on sponsored plates.
+   - Base salary, total bonus, and final net payout calculations across active monthly tabs.
+
+4. **Donation & Revenue Analytics**:
+   - Interactive SVG Donut chart displaying revenue bifurcations across payment modes and categories.
+   - Real-time KPI summary cards (Total Revenue, Cash, GPay, Bank, Pending Collections).
+
+5. **Official Kitchen Policy & PDF Guidelines**:
+   - Official kitchen guidelines and rules.
+   - Policy Section 3 plate incentive rate matrix table.
+   - Embedded interactive PDF document viewer.
+
+6. **Master Template Cloning**:
+   - One-click new month worksheet creation preserving all formulas, cell formatting, and tab structures.
+
+7. **Dual-Theme Design System**:
+   - **Aurora Light**: Modern pastel gradients (`#eef2ff`, `#e0e7ff`, `#f8fafc`) with subtle frosted glass surfaces.
+   - **Cosmic Dark**: Deep navy/slate gradients (`#0b0f19`, `#111827`, `#0f172a`) with glowing accent borders.
+
+---
+
+## ⚛️ Modular Architecture
+
+### 1. Frontend Component Structure (`static/js/`)
+The application is structured into decoupled, single-responsibility React 18 components:
 
 ```
 static/
 ├── index.html                 # Mounts React 18 application at #root
-├── css/styles.css             # Comprehensive design system, mobile responsiveness, animations
 └── js/
     ├── constants.js           # Menu rates, Section 3 incentive matrix, currency formatters
     ├── api.js                 # Unified API client for FastAPI endpoints
@@ -19,7 +54,7 @@ static/
     │   ├── Common.jsx         # Spinners, badges (Paid/Pending), loading states
     │   ├── Toast.jsx          # Interactive toast alert notification system
     │   ├── Header.jsx         # Topbar, month selector, new sheet trigger, theme toggle
-    │   ├── Navigation.jsx     # 5-page tab bar with smooth transition indicator
+    │   ├── Navigation.jsx     # Tab bar with smooth transition indicator
     │   ├── SyncBanner.jsx     # Live Google Sheet status and direct link
     │   ├── Orders/
     │   │   ├── StatsCards.jsx         # KPI summary cards
@@ -37,90 +72,92 @@ static/
     │   │   └── PolicySection.jsx      # Official kitchen rules, matrix table & PDF viewer
     │   └── Modals.jsx                 # Accessible modals with in-button spinners
     ├── App.jsx                # Root orchestrator managing state, lifecycle, and tabs
-    └── index.jsx              # React 18 DOM mount point
+    ├── index.jsx              # React 18 DOM mount point
+    └── app-bundle.jsx         # Compiled production bundle
+```
+
+### 2. Component-Specific CSS Architecture (`static/css/`)
+Styles are modularized into domain-specific stylesheets and compiled into a single production bundle:
+
+```
+static/css/
+├── variables.css              # Color tokens, gradients, shadows, theme variables
+├── base.css                   # Global resets, typography, root layout
+├── layout.css                 # Fixed topbar, main container, sticky action bars
+├── animations.css             # Keyframe animations (pulse, spin, fadeIn, shimmer)
+├── responsive.css             # Breakpoint adaptations (<=1024px, <=768px, <=480px)
+├── styles.css                 # Master registry with native @import directives
+├── styles.bundle.css          # Production compiled CSS bundle
+└── components/
+    ├── analytics.css          # Donut chart and analytics cards
+    ├── badges.css             # Status badges and tag styling
+    ├── banner.css             # Google Sheets sync banner
+    ├── buttons.css            # Buttons, icon buttons, states
+    ├── cards.css              # Stats cards and gradient borders
+    ├── cooks.css              # Cook payroll cards and salary breakdowns
+    ├── modals.css             # Dialog popups and form inputs
+    ├── navigation.css         # Category navigation tabs
+    ├── orders.css             # Order toolbars, search, filter controls
+    ├── policy.css             # Policy cards and matrix tables
+    ├── table.css              # Data tables and responsive rows
+    ├── toast.css              # Toast notifications
+    └── vendors.css            # Vendor cards and bill tables
 ```
 
 ---
 
-## 🌟 Key Modules
+## 🛠️ Technology Stack
 
-1. **Orders & Sponsors**: Devotee plates, matrix incentive calculator, donation bifurcations, Cash/GPay/Bank tracking.
-2. **Vendor Management**: Vendor accounts, multi-bill breakdown, auto-calculated expenses, debit/credit difference.
-3. **Cook Management & Payroll**: Staff roster, Policy Section 3 matrix profit distribution, base salaries, festival allowances, annual bonuses, synced directly across all active month tabs.
-4. **Donation Analytics**: Dynamic visual charts and breakdown summaries.
-5. **Master Template Cloning**: One-click new month worksheet creation preserving all formulas and layout.
-
----
-
-## 🚀 Free Hosting Guide (Step-by-Step)
-
-You can host this application **100% free with a public HTTPS URL** using either **Render.com** (recommended) or **Hugging Face Spaces**.
+- **Backend**: [FastAPI](https://fastapi.tiangolo.com/) (Python 3.9+), Uvicorn ASGI Server
+- **Google Sheets Integration**: `gspread`, Google API Client Libraries, Service Account OAuth2
+- **Data Engine**: `pandas`, `openpyxl` (local Excel cache and fallback)
+- **Frontend**: [React 18](https://react.dev/), Babel Standalone / Native Bundling
+- **Styling**: Component-specific CSS3 with modern CSS custom properties and Flexbox/CSS Grid
 
 ---
 
-### Option A: Render.com (Recommended - 5 Minutes)
+## 💻 Local Setup & Execution
 
-**Render** offers free Web Services with automatic HTTPS (`https://your-app-name.onrender.com`) and automatic continuous deployment from GitHub.
+### Prerequisites
+- Python 3.9 or higher
+- Google Cloud Service Account credentials (`credentials.json`) with access to the target Google Sheet
 
-#### Step 1: Push Project to GitHub
-1. Create a new repository on [GitHub](https://github.com/new) (e.g. `kitchen-accountability-erp`).
-2. Make sure `.gitignore` is present so `credentials.json` is **never committed publicly**.
-3. Push your code:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit of Kitchen Accountability ERP"
-   git branch -M main
-   git remote add origin https://github.com/<your-username>/kitchen-accountability-erp.git
-   git push -u origin main
-   ```
-
-#### Step 2: Deploy on Render
-1. Go to [Render.com](https://render.com) and sign in (using GitHub).
-2. Click **New +** -> **Web Service**.
-3. Select your GitHub repository (`kitchen-accountability-erp`).
-4. Configure the service settings:
-   - **Name**: `kitchen-accountability` (or any name you choose)
-   - **Runtime**: `Python 3`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn app:app --host 0.0.0.0 --port $PORT`
-   - **Instance Type**: `Free`
-5. In **Environment Variables**, add:
-   - `SPREADSHEET_ID`: `15tvKnG6mx2XiwQi54pynK1q_gSMW8lNrwMklKambK4Y`
-   - `SPREADSHEET_GID`: `1912501962`
-   - `GOOGLE_SERVICE_ACCOUNT_JSON`: Open your local `credentials.json` file, copy the entire JSON content, and paste it here as the value.
-6. Click **Create Web Service**.
-7. In ~2 minutes, your free live URL (`https://kitchen-accountability.onrender.com`) will be online!
-
----
-
-### Option B: Hugging Face Spaces (100% Free, Always On)
-
-**Hugging Face Spaces** provides 100% free CPU containers (2 vCPU, 16 GB RAM) with public HTTPS links and built-in secrets management.
-
-1. Go to [Hugging Face Spaces](https://huggingface.co/spaces) and click **Create new Space**.
-2. Space Name: `kitchen-erp`
-3. Space SDK: **Docker** (using the included `Dockerfile`) or **FastAPI**.
-4. Visibility: **Public** or **Private**.
-5. Go to Space **Settings** -> **Variables and secrets** -> **New secret**:
-   - Name: `GOOGLE_SERVICE_ACCOUNT_JSON`
-   - Value: Paste the contents of `credentials.json`
-6. Push the repository files. The app builds and runs instantly!
-
----
-
-### Option C: Koyeb (Always-Free Nano Tier)
-
-1. Sign up on [Koyeb.com](https://www.koyeb.com).
-2. Click **Create App** -> **GitHub**.
-3. Select repo, set port `8000`, add `GOOGLE_SERVICE_ACCOUNT_JSON` environment variable.
-4. Deploy!
-
----
-
-## 💻 Local Development
-
+### 1. Installation
 ```powershell
-uvicorn app:app --host 127.0.0.1 --port 8000
+# Clone or navigate to the project directory
+cd sheet_sync_dashboard
+
+# Create and activate a virtual environment (optional but recommended)
+python -m venv venv
+.\venv\Scripts\activate
+
+# Install required dependencies
+pip install -r requirements.txt
 ```
-Open browser: **http://127.0.0.1:8000**
+
+### 2. Configuration
+Create a `.env` file from `.env.example`:
+```ini
+SPREADSHEET_ID=your_google_spreadsheet_id_here
+SPREADSHEET_GID=your_initial_sheet_gid_here
+# Either provide the path to credentials.json:
+GOOGLE_APPLICATION_CREDENTIALS=credentials.json
+# Or provide the full raw JSON string:
+# GOOGLE_SERVICE_ACCOUNT_JSON={"type": "service_account", ...}
+```
+
+### 3. Build Scripts
+Whenever modifying JSX components or CSS stylesheets:
+```powershell
+# Recompile CSS bundle
+powershell -ExecutionPolicy Bypass -File build_css.ps1
+
+# Recompile React JSX bundle
+powershell -ExecutionPolicy Bypass -File build_bundle.ps1
+```
+
+### 4. Run the Application
+```powershell
+uvicorn app:app --host 127.0.0.1 --port 8000 --reload
+```
+Open your browser and navigate to: **http://127.0.0.1:8000**
