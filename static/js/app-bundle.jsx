@@ -213,12 +213,12 @@ window.KitchenComponents.Header = (() => {
       <header className="topbar">
         <div className="topbar-brand">
           <div className="brand-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z" />
               <line x1="6" y1="17" x2="18" y2="17" />
             </svg>
           </div>
-          <div>
+          <div className="brand-text">
             <h1 className="brand-title">Kitchen Accountability</h1>
             <p className="brand-subtitle">
               ISKCON Ponda &bull; Live Google Sheets ERP
@@ -229,7 +229,7 @@ window.KitchenComponents.Header = (() => {
         <div className="topbar-actions">
           {/* Month Selector & New Sheet Button */}
           <div className="month-selector-wrapper">
-            <label htmlFor="monthTabSelect" className="hide-mobile" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+            <label htmlFor="monthTabSelect" className="month-select-label hide-mobile">
               Month:
             </label>
             <select
@@ -245,7 +245,8 @@ window.KitchenComponents.Header = (() => {
             </select>
             <button
               id="openNewSheetBtn"
-              className="btn btn-secondary btn-sm"
+              type="button"
+              className="btn btn-secondary topbar-btn"
               title="Create new sheet tab using Master Template"
               onClick={onOpenCreateSheet}
             >
@@ -267,6 +268,7 @@ window.KitchenComponents.Header = (() => {
           {/* Theme Toggle Button */}
           <button
             id="themeToggleBtn"
+            type="button"
             className="theme-toggle-btn"
             aria-label={theme === 'dark' ? 'Switch to day mode' : 'Switch to night mode'}
             title={theme === 'dark' ? 'Switch to day mode' : 'Switch to night mode'}
@@ -296,7 +298,6 @@ window.KitchenComponents.Header = (() => {
 })();
 
 window.KitchenComponents.Header.Header = window.KitchenComponents.Header;
-
 
 
 // --- Component: static/js/components/Navigation.jsx ---
